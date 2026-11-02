@@ -3,9 +3,9 @@
 # group-0-writable dirs, nginx on 8080). Tested locally by the "local" overlay, which forces
 # such a UID; the Route itself is not exercised outside a real OpenShift cluster.
 #
-#   oc new-project agentic-rag
+#   oc project <your-project>          # deploys into the current project
 #   oc create secret generic rag-secrets --from-env-file=<(grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD)=' .env)
-#   oc apply -k deploy/openshift
+#   oc apply -k deploy/openshift       # or: ./deploy/openshift/deploy.sh
 #   oc get route web    # -> https://web-agentic-rag.apps.<cluster>/
 #
 # Postgres note: pgvector/pgvector:pg16 runs under an arbitrary UID because PGDATA points at
@@ -17,3 +17,10 @@ kind: Kustomization
 resources:
   - ../k8s/base
   - route.yaml
+patches:
+  # The Route makes the app public: no fault-injection demo switch there.
+  - target: { kind: ConfigMap, name: rag-config }
+    patch: |-
+      - op: replace
+        path: /data/ALLOW_FAULT_INJECTION
+        value: "false"

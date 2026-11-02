@@ -20,9 +20,15 @@ spec:
     metadata:
       labels: { app: redis }
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: redis
           image: redis:7-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
           args: ["redis-server", "--save", "", "--appendonly", "no",
                  "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
           ports: [{ containerPort: 6379 }]

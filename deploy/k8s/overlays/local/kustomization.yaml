@@ -1,8 +1,9 @@
 # Docker Desktop Kubernetes: use the locally built images (no registry), expose the UI on
-# http://localhost:30080, and run api/web as an arbitrary non-root UID in group 0, which is
+# http://localhost:30080, and run every pod as an arbitrary non-root UID in group 0, which is
 # what OpenShift's restricted SCC does. If the app works here, it starts under OpenShift too.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: agentic-rag
 resources:
   - ../../base
 images:
@@ -21,7 +22,18 @@ patches:
       - op: add
         path: /spec/ports/0/nodePort
         value: 30080
-  - target: { kind: Deployment, name: "api|web" }
+  - target: { kind: Deployment, name: "api|web|redis" }
+    patch: |-
+      - op: add
+        path: /spec/template/spec/securityContext/runAsUser
+        value: 1000680000
+      - op: add
+        path: /spec/template/spec/securityContext/runAsGroup
+        value: 0
+      - op: add
+        path: /spec/template/spec/securityContext/fsGroup
+        value: 0
+  - target: { kind: StatefulSet, name: db }
     patch: |-
       - op: add
         path: /spec/template/spec/securityContext/runAsUser

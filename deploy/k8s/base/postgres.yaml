@@ -22,9 +22,17 @@ spec:
     metadata:
       labels: { app: db }
     spec:
+      # Restricted (OpenShift-compatible): runs under an arbitrary non-root UID. Works because
+      # PGDATA is a subdirectory the process creates itself (verified with --user 1000680000:0).
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
       containers:
         - name: postgres
           image: pgvector/pgvector:pg16
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
           ports: [{ containerPort: 5432 }]
           env:
             - name: POSTGRES_USER
