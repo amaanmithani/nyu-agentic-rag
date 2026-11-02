@@ -218,7 +218,7 @@ Measured results:
 | Rolling update (`$K set image deploy/api api=agentic-rag-api:<sha>`) while polling `/health` every 0.2 s | first try: 354 ok / 4 failed; after adding a 5 s `preStop` drain: **378 ok / 1 failed** (the remaining failure is most likely a 2 s client timeout while the new pod loads its models on a single-node laptop) |
 | Rollback (`$K rollout undo deploy/api`) | back to `agentic-rag-api:local`, rollout complete |
 | Persistence | after deleting `db-0` and both api pods: health ok, **11 documents / 1,106 chunks** still present |
-| HPA | created, but metrics show `<unknown>`: Docker Desktop ships without metrics-server, so autoscaling was **not demonstrated** |
+| HPA | created; metrics show `<unknown>` locally because Docker Desktop ships without metrics-server. **Autoscaling was demonstrated on OpenShift** (2→5 replicas, see below). |
 
 To pause: `kubectl -n agentic-rag scale deploy --all --replicas=0` and
 `kubectl -n agentic-rag scale statefulset db --replicas=0` (delete the HPA first, or it scales
