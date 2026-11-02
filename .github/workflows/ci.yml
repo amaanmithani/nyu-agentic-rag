@@ -34,6 +34,10 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - name: Render Kubernetes / OpenShift manifests
+        run: |
+          kubectl kustomize deploy/k8s/overlays/local > /dev/null
+          kubectl kustomize deploy/openshift > /dev/null
       - name: Frontend type-check + build
         working-directory: web
         run: npm ci && npm run build
