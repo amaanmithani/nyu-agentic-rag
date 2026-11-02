@@ -22,7 +22,7 @@ JUDGE_MODEL = "claude-haiku-5-5"
 JUDGE_PROMPT = (Path(__file__).parent / "judge_prompt.md").read_text()
 
 REFUSAL = re.compile(
-    r"(do(es)? not|don't|doesn't) (contain|include|mention|cover|address|provide|discuss)"
+    r"(do(es)? not|don't|doesn't) (contain|include|mention|cover|address|provide|discuss|say|state)"
     r"|no (information|evidence|mention|guidance|recommendation)s?"
     r"|not (found|mentioned|covered|addressed) in|could not find|none of the documents",
     re.IGNORECASE,
