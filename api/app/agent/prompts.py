@@ -33,6 +33,9 @@ rephrasings per sub-question, then treat that evidence as missing.
 read_document_section on that page or the next one.
    - status "error": fix the arguments using the note; "timeout": you may retry once, \
 otherwise continue with what you have and say what could not be checked.
+   - if a tool kept failing and you worked around it (e.g. read pages directly because \
+search failed), say so in one short sentence in the answer, so the user knows how the \
+evidence was gathered and what may be incomplete.
 3. Combine evidence across documents. Governance documents are revised, superseded and \
 contradicted: a memo may rescind an earlier one, a framework may have several editions, \
 and an organization's internal policy may disagree with federal guidance. When documents \

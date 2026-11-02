@@ -100,6 +100,11 @@ def run_baseline(inp: RunInput, llm: LLM, settings: Settings, emit: Emit) -> Run
         usage.add(resp.usage)
         model = resp.model
         answer, status, stop = resp.text, "answered", "answer"
+        if not answer.strip():
+            # Seen in eval: with tools disabled, the model sometimes returns no text at all
+            # when it would have asked for clarification. Report it instead of "answered".
+            answer = "No answer was generated (empty model response)."
+            status, stop = "error", "empty_response"
         emit(
             "llm_call",
             {

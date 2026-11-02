@@ -21,15 +21,21 @@ from app.agent.citations import parse_citations
 JUDGE_MODEL = "claude-haiku-5-5"
 JUDGE_PROMPT = (Path(__file__).parent / "judge_prompt.md").read_text()
 
+# Refusal = the answer *leads* with "the documents don't <verb> X" (the prompt asks for the
+# direct answer first). Checked on the opening only, so "the documents don't give a calendar
+# date" deep inside a full answer is not mistaken for a refusal.
 REFUSAL = re.compile(
-    r"(do(es)? not|don't|doesn't) (contain|include|mention|cover|address|provide|discuss|say|state)"
-    r"|no (information|evidence|mention|guidance|recommendation)s?"
-    r"|not (found|mentioned|covered|addressed) in|could not find|none of the documents",
+    r"(do(es)? not|don't|doesn't) (contain|include|mention|cover|address|provide|discuss|say"
+    r"|state|set|specify|establish|define|list|give)"
+    r"|no (information|evidence|mention|guidance|recommendation|salary|figure)s?"
+    r"|not (found|mentioned|covered|addressed|specified) in|could not find|none of the documents",
     re.IGNORECASE,
 )
+OPENING_CHARS = 250
 CONFLICT = re.compile(
     r"disagree|conflict|contradict|inconsisten|differ(s|ent|ence)?|do not agree|don't agree"
-    r"|not consistent|whereas|by contrast",
+    r"|not consistent|whereas|by contrast|in contrast|unlike|supersed|rescind|replaces"
+    r"|(does not|doesn't|do not|don't) match|discrepan|mismatch|earlier rule",
     re.IGNORECASE,
 )
 INCOMPLETE = re.compile(
@@ -47,7 +53,7 @@ def observed_behavior(status: str, answer: str) -> str:
     cited = parse_citations(answer)
     if not cited and answer.rstrip().endswith("?"):
         return "clarify"  # the baseline can only clarify in plain text
-    if REFUSAL.search(answer) and len(cited) <= 3:
+    if REFUSAL.search(answer[:OPENING_CHARS]):
         return "refuse"
     if CONFLICT.search(answer):
         return "conflict"
