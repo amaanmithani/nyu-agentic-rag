@@ -18,6 +18,7 @@ from app.config import get_settings
 log = logging.getLogger(__name__)
 
 BREAKER_COOLDOWN_S = 15.0
+UNAVAILABLE = object()  # sentinel: the call did not reach Redis
 
 
 class SafeRedis:
@@ -33,13 +34,16 @@ class SafeRedis:
 
     def _call(self, method: str, *args: Any, **kwargs: Any) -> Any:
         if not self.available:
-            return None
+            return UNAVAILABLE
         try:
             return getattr(self._client, method)(*args, **kwargs)
         except redis.RedisError as e:
             log.warning("redis %s failed, breaker open %ss: %s", method, BREAKER_COOLDOWN_S, e)
             self._open_until = time.monotonic() + BREAKER_COOLDOWN_S
-            return None
+            return UNAVAILABLE
+
+    def _or_none(self, value: Any) -> Any:
+        return None if value is UNAVAILABLE else value
 
     def ping(self) -> bool:
         # Health checks bypass the breaker so recovery is noticed immediately.
@@ -51,19 +55,25 @@ class SafeRedis:
             return False
 
     def get(self, key: str) -> str | None:
-        return self._call("get", key)
+        return self._or_none(self._call("get", key))
 
     def set(self, key: str, value: str, ex: int | None = None, nx: bool = False) -> bool | None:
-        return self._call("set", key, value, ex=ex, nx=nx)
+        """True = written, False = not written (nx and key exists), None = Redis unavailable.
+
+        redis-py itself returns None when an NX set finds the key, which would be
+        indistinguishable from "unavailable"; normalize it to False here.
+        """
+        result = self._call("set", key, value, ex=ex, nx=nx)
+        return None if result is UNAVAILABLE else bool(result)
 
     def delete(self, key: str) -> int | None:
-        return self._call("delete", key)
+        return self._or_none(self._call("delete", key))
 
     def expire(self, key: str, seconds: int) -> bool | None:
-        return self._call("expire", key, seconds)
+        return self._or_none(self._call("expire", key, seconds))
 
     def incr(self, key: str) -> int | None:
-        return self._call("incr", key)
+        return self._or_none(self._call("incr", key))
 
 
 _redis: SafeRedis | None = None

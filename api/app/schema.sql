@@ -42,3 +42,51 @@ CREATE TABLE IF NOT EXISTS corpus_state (
     version  BIGINT NOT NULL DEFAULT 0
 );
 INSERT INTO corpus_state (id, version) VALUES (TRUE, 0) ON CONFLICT DO NOTHING;
+
+-- Durable copy of session state. Redis (session:{id}) is the fast path; every write goes to
+-- both, so a Redis outage or eviction loses nothing.
+CREATE TABLE IF NOT EXISTS sessions (
+    id          TEXT PRIMARY KEY,               -- random token; knowing it is the only access
+    state       JSONB NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- One row per question (agent or baseline): what the eval and the UI history read.
+CREATE TABLE IF NOT EXISTS runs (
+    id              BIGSERIAL PRIMARY KEY,
+    session_id      TEXT REFERENCES sessions(id) ON DELETE CASCADE,
+    mode            TEXT NOT NULL,              -- agent | baseline
+    question        TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'running',  -- running|answered|clarification|partial|error
+    stop_reason     TEXT,
+    answer          TEXT,
+    citation_report JSONB,
+    steps           INT,
+    tool_calls      INT,
+    tokens_in       INT,                        -- uncached input tokens
+    tokens_out      INT,
+    tokens_cache_read  INT,
+    tokens_cache_write INT,
+    cost_usd        NUMERIC(10, 6),
+    latency_ms      INT,
+    model           TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at     TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS runs_session ON runs (session_id, created_at);
+
+-- One row per trace event (LLM call, tool call, tool result, limit, ...).
+CREATE TABLE IF NOT EXISTS trace_events (
+    id       BIGSERIAL PRIMARY KEY,
+    run_id   BIGINT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+    seq      INT NOT NULL,
+    type     TEXT NOT NULL,
+    step     TEXT,
+    tool     TEXT,
+    status   TEXT,
+    ms       INT,
+    payload  JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (run_id, seq)
+);

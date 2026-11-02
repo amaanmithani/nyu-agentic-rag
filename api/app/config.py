@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     max_tokens_per_run: int = 60_000
     run_deadline_s: float = 60.0
     fault_inject: str = ""
+    allow_fault_injection: bool = False  # lets a request pass fault_inject (eval/demo only)
 
 
 @lru_cache

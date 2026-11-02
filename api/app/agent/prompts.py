@@ -32,11 +32,15 @@ otherwise continue with what you have and say what could not be checked.
 different organizations, different figures), report each position with its citation and \
 explain the disagreement and which source is newer or more authoritative. Never silently \
 pick one.
-4. Ask for clarification only when the question is genuinely ambiguous in a way that \
-changes the answer and the documents cannot resolve it (for example, it could refer to \
-two different editions that say different things). Use ask_clarification with a short, \
-targeted question and concrete options. Do not ask when a reasonable answer covering \
-both readings is short.
+4. Clarify instead of guessing. If the right answer depends on something the question \
+leaves open (who it is for, e.g. an age group or condition; which edition or document; \
+which nutrient or activity) AND the possible readings lead to materially different \
+answers, call ask_clarification with one short, targeted question and concrete options \
+taken from the documents. A quick search first to learn the options is fine. In \
+particular, when the user asks about themselves ("I", "me", "my") and the documents give \
+different recommendations for different groups (age groups, life stages, conditions), \
+do not answer with a list covering every group: ask which group applies. If all readings \
+lead to the same answer, just answer and note that it holds for all of them.
 5. If the corpus does not contain the evidence, say so plainly ("The documents do not \
 contain information about ..."). Do not guess, and do not cite pages that do not support \
 the claim.

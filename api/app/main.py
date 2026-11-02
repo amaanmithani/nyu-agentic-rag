@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app import db
 from app.ingest import embedder
 from app.redis import get_redis
-from app.routes import documents
+from app.routes import chat, documents
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -33,6 +33,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Agentic RAG API", lifespan=lifespan)
 app.include_router(documents.router)
+app.include_router(chat.router)
 
 
 @app.get("/health")
