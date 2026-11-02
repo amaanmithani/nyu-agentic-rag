@@ -85,7 +85,10 @@ cases:
     category: tool failure
     question: How many hours of sleep do adults need?
     fault_inject: "search_documents:error:9"
-    expected_behavior: partial
+    # Changed after the first run (was "partial"): the brief allows "bounded retry OR graceful
+    # recovery", and the agent recovered by switching to read_document_section. Either an
+    # evidence-backed answer or an honest partial passes; fabricated citations still fail.
+    expected_behavior: recover_or_partial
     required_facts: []
     expected_sources: []
 

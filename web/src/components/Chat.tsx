@@ -34,7 +34,11 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
   const bottom = useRef<HTMLDivElement>(null);
   const pending = turns.at(-1)?.status === "clarification" ? turns.at(-1)?.clarification : null;
 
-  useEffect(() => bottom.current?.scrollIntoView({ behavior: "smooth" }), [turns]);
+  // Block body on purpose: an effect must return nothing or a cleanup function, and newer
+  // browsers return a value from scrollIntoView, which React would then try to call.
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ behavior: "smooth" });
+  }, [turns]);
 
   const submit = (q: string) => {
     if (!q.trim() || busy) return;

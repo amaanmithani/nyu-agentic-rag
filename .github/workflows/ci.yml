@@ -1,0 +1,77 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: write # push images to GHCR on main
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.12.5"
+      - name: Lint (ruff)
+        working-directory: api
+        run: |
+          uv sync --frozen
+          uv run ruff check . ../eval --config pyproject.toml
+          uv run ruff format --check . ../eval --config pyproject.toml
+      - name: Unit tests (tools, chunker, citations, agent loop with fake LLM, sessions)
+        working-directory: api
+        run: uv run pytest -q
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Frontend type-check + build
+        working-directory: web
+        run: npm ci && npm run build
+
+  build-and-smoke:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CI env (stub LLM, no secrets needed)
+        run: |
+          cp .env.example .env
+          sed -i 's/^LLM_PROVIDER=.*/LLM_PROVIDER=stub/' .env
+          sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-only-password/' .env
+          sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=${GITHUB_SHA::12}/" .env
+      - name: Build images
+        run: docker compose build
+      - name: Start stack
+        run: docker compose up -d --wait --wait-timeout 300
+      - name: Smoke test (health, ingest, ask, Redis outage)
+        run: ./scripts/smoke.sh
+      - name: Persistence across restart
+        run: |
+          docker compose down
+          docker compose up -d --wait --wait-timeout 300
+          n=$(curl -fsS localhost:8000/documents | python3 -c 'import json,sys; print(len(json.load(sys.stdin)["documents"]))')
+          echo "documents after restart: $n"; test "$n" -ge 1
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail 200
+      - name: Push images (main only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          TAG=${GITHUB_SHA::12}
+          for svc in api web; do
+            docker tag agentic-rag-$svc:$TAG $REGISTRY/nyu-agentic-rag-$svc:$TAG
+            docker tag agentic-rag-$svc:$TAG $REGISTRY/nyu-agentic-rag-$svc:latest
+            docker push $REGISTRY/nyu-agentic-rag-$svc:$TAG
+            docker push $REGISTRY/nyu-agentic-rag-$svc:latest
+          done

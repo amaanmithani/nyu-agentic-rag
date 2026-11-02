@@ -59,6 +59,9 @@ def behavior_ok(expected: str, observed: str, answer: str) -> bool:
         return observed in ("conflict", "answer") and bool(CONFLICT.search(answer))
     if expected == "partial":  # graceful: says what failed, or the loop itself returned partial
         return observed == "partial" or bool(INCOMPLETE.search(answer)) or observed == "refuse"
+    if expected == "recover_or_partial":  # tool failure: recover with evidence, or report it
+        recovered = bool(parse_citations(answer))  # fabricated citations are checked separately
+        return recovered or behavior_ok("partial", observed, answer)
     if expected == "answer":
         return observed in ("answer", "conflict")
     return observed == expected

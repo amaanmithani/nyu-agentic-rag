@@ -14,9 +14,12 @@ Expected behaviors:
   (with the required figures), and does not silently pick one.
 - partial: the system could not finish (e.g. a tool failed) and says clearly what is missing,
   rather than presenting an unverified answer as complete.
+- recover_or_partial: a tool failed during the run. Correct if the system EITHER recovered
+  (e.g. retried or used another tool) and answered with cited evidence, OR clearly reported
+  what it could not complete. Incorrect if it presents an answer with no evidence as complete.
 
 Return ONLY a JSON object, no other text:
-{"behavior": "<answer|clarify|refuse|conflict|partial>",
+{"behavior": "<answer|clarify|refuse|conflict|partial|recover_or_partial>",
  "correct": <true|false>,
  "reason": "<one sentence>"}
 

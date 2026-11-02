@@ -38,17 +38,35 @@ def load_env() -> None:
                 os.environ.setdefault(k.strip(), v.strip())
 
 
+def post(http: httpx.Client, path: str, **kw) -> httpx.Response:
+    """POST with up to 3 attempts on connection errors (e.g. the API container restarted)."""
+    for attempt in range(3):
+        try:
+            r = http.post(path, **kw)
+            r.raise_for_status()
+            return r
+        except httpx.TransportError as e:
+            print(f"  ! {path}: {e}; waiting for the API to come back (attempt {attempt + 1})")
+            for _ in range(60):
+                time.sleep(2)
+                try:
+                    if http.get("/health").json().get("models") == "ready":
+                        break
+                except httpx.TransportError:
+                    pass
+    raise SystemExit(f"API unreachable after retries: {path}")
+
+
 def ask(http: httpx.Client, sid: str, question: str, mode: str, fault: str | None) -> dict:
     body = {"question": question, "mode": mode, "fault_inject": fault}
-    r = http.post(f"/sessions/{sid}/ask", params={"stream": "false"}, json=body)
-    r.raise_for_status()
+    r = post(http, f"/sessions/{sid}/ask", params={"stream": "false"}, json=body)
     data = r.json()
     finished = next(e["data"] for e in data["events"] if e["type"] == "run_finished")
     return {"run_id": data["run_id"], "events": data["events"], **finished}
 
 
 def run_case(http, judge_client, case: dict, mode: str) -> dict:
-    sid = http.post("/sessions").json()["session_id"]
+    sid = post(http, "/sessions").json()["session_id"]
     turns = [(case["question"], case, case.get("fault_inject"))]
     if case.get("followup"):
         turns.append((case["followup"]["question"], case["followup"], None))
@@ -187,10 +205,14 @@ def main() -> None:
     docs = http.get("/documents").json()["documents"]
 
     t0 = time.monotonic()
+    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+    RESULTS.mkdir(exist_ok=True)
+    partial = RESULTS / f"{ts}.partial.json"
     results = []
     for case in cases:
         for mode in modes:
             results.append(run_case(http, judge, case, mode))
+            partial.write_text(json.dumps(results, default=str))  # nothing lost if interrupted
 
     judge_cost = sum(
         (
@@ -203,7 +225,6 @@ def main() -> None:
         if t["judge_usage"]
     )
     summaries = {m: summarize(results, m) for m in modes}
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
     first_run = results[0]["turns"][0]["run"] if results else {}
     meta = {
         "timestamp": ts,
@@ -215,11 +236,11 @@ def main() -> None:
         "wall_clock_s": round(time.monotonic() - t0, 1),
     }
 
-    RESULTS.mkdir(exist_ok=True)
     (RESULTS / f"{ts}.json").write_text(
         json.dumps({"meta": meta, "summary": summaries, "results": results}, indent=2, default=str)
     )
     write_report(RESULTS / f"{ts}.md", results, summaries, meta)
+    partial.unlink(missing_ok=True)
 
     print("\n" + json.dumps(summaries, indent=2))
     print(f"judge cost ${judge_cost:.4f} · wall clock {meta['wall_clock_s']}s")
