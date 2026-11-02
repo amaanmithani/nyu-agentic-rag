@@ -1,5 +1,5 @@
-# FastAPI backend: 2 replicas behind a Service. Safe to run several because all shared state
-# is external: sessions/locks in Redis + Postgres, uploads and model cache on volumes.
+# FastAPI backend: 2+ replicas behind a Service. Stateless: all shared state is external
+# (sessions/locks in Redis + Postgres, documents/chunks/runs in Postgres).
 #
 # Probes:
 #   startup    /health with a long budget: the first start downloads ~200 MB of models
@@ -70,28 +70,16 @@ spec:
             - { name: uploads, mountPath: /data/uploads }
             - { name: models, mountPath: /models }
       volumes:
-        # ReadWriteOnce is fine on one node. Multi-node: ReadWriteMany storage, or object
-        # storage for uploads and models baked into the image.
+        # Per-pod scratch space, so the API is stateless and can be scheduled on any node.
+        # A shared ReadWriteOnce volume made scaled-out pods on other nodes fail with
+        # "Multi-Attach error" on a multi-node OpenShift cluster. Neither needs sharing:
+        # an uploaded PDF is only read by the background ingest in the same pod (results go
+        # to Postgres), and each pod downloads its ~150 MB of models once at startup.
+        # Production: bake the models into the image; uploads to object storage + a worker.
         - name: uploads
-          persistentVolumeClaim: { claimName: uploads }
+          emptyDir: { sizeLimit: 1Gi }
         - name: models
-          persistentVolumeClaim: { claimName: model-cache }
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: uploads
-spec:
-  accessModes: [ReadWriteOnce]
-  resources: { requests: { storage: 2Gi } }
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: model-cache
-spec:
-  accessModes: [ReadWriteOnce]
-  resources: { requests: { storage: 2Gi } }
+          emptyDir: { sizeLimit: 1Gi }
 ---
 # Scale the API on CPU (embedding + reranking are CPU-bound). Needs metrics-server.
 apiVersion: autoscaling/v2

@@ -250,15 +250,46 @@ linux/amd64 by CI); the cluster needs pull access (public packages or an image p
 
 ### OpenShift Developer Sandbox results
 
-> **TODO:** a deployment to a real OpenShift cluster (Red Hat Developer Sandbox) is in progress.
-> Until this section is filled in, the OpenShift Route and the cluster's actual SCC admission are
-> **untested**; everything else in the overlay was exercised on Kubernetes with an arbitrary UID.
+Deployed to a real OpenShift cluster (Red Hat Developer Sandbox, project `amaanmithani-dev`,
+multi-node AWS) with the **same images CI publishes to GHCR** and the `deploy/openshift` overlay.
+
+```bash
+oc login --token=<from console> --server=https://api.<cluster>:6443   # token kept in .env, never committed
+./deploy/openshift/deploy.sh          # Secret from .env via stdin, oc apply -k, wait for rollouts
+API=https://<route-host>/api ./scripts/seed.sh
+API=https://<route-host>/api WEB=https://<route-host> \
+  REDIS_STOP="oc scale deploy/redis --replicas=0 && oc wait --for=delete pod -l app=redis" \
+  REDIS_START="oc scale deploy/redis --replicas=1" ./scripts/smoke.sh
+```
+
+| Check | Result |
+|---|---|
+| All pods admitted under OpenShift's **`restricted-v2` SCC** | ✅ api ×2, web ×2, db, redis; OpenShift assigned its own UID `1011910000` (gid 0) to every pod, no `runAsUser` in our manifests |
+| Postgres (pgvector) and Redis under the arbitrary UID | ✅ running, data persisted on a `gp3` volume |
+| **Route** (edge TLS) | ✅ `https://web-<project>.apps.<cluster>`, valid Let's Encrypt certificate; plain HTTP → **302** to HTTPS |
+| Health over HTTPS | ✅ `{"status":"ok","db":"ok","redis":"ok","models":"ready"}` |
+| Fault injection on the public URL | ✅ rejected: HTTP 400 `fault injection is disabled (ALLOW_FAULT_INJECTION=false)` (the overlay sets it to false) |
+| Corpus ingested through the public URL | ✅ 11 docs, 606 pages, 1,106 chunks (≈9.7 min on the sandbox's shared CPUs vs ≈2 min locally) |
+| **Autoscaling (HPA)** | ✅ ingestion drove the API to ~200% of its CPU request; HPA events: *"New size: 4; reason: cpu resource utilization above target"* → *"New size: 5"* (the max) |
+| Smoke test over HTTPS incl. **Redis outage** | ✅ `SMOKE OK`: cited answer, injection reported as ignored; with Redis scaled to 0, `/health` = degraded, question answered, session state from Postgres |
+| **Rolling update** `oc set image deploy/api api=…:ccc21eb42bca` | ✅ **341/341** health checks over HTTPS succeeded during the rollout (5 replicas) |
+| **Rollback** `oc rollout undo deploy/api` | ✅ back to `:latest`, **338/338** health checks succeeded |
+
+**Bug found only on the real cluster, and fixed.** When the HPA scaled the API from 2 to 5, three
+new pods landed on other nodes and hung in `ContainerCreating` with *"Multi-Attach error for
+volume … already used by pod(s) …"*: the `uploads` and `model-cache` volumes were
+`ReadWriteOnce` (an EBS volume attaches to one node). Docker Desktop has a single node, so it
+could not show this. Neither volume needed sharing (an uploaded PDF is only read by the ingest
+task in the same pod; each pod can download its own models), so both became per-pod `emptyDir`
+and the API is now stateless. After `oc apply`, all 5 replicas ran on **5 different nodes**;
+Postgres was untouched (revision 1, 0 restarts) and all 11 documents remained. Trade-off: each
+new API pod downloads ~150 MB of models at startup (production: bake them into the image).
 
 ## Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
-| `/health` shows `"models":"loading"` | First start downloads ~200 MB into the `model-cache` volume; wait ~30 s. |
+| `/health` shows `"models":"loading"` | First start downloads ~200 MB of models (Compose: into the `model-cache` volume; Kubernetes/OpenShift: per pod); wait ~30 s. |
 | Port 5432 already in use by another project | Not a conflict: our `db` is not published to the host (internal network only). Only 8000 and 8080 are published. |
 | API container slow or killed | Docker needs ≈8 GB; the API holds ≈1.5 GB of models. Don't run the Compose stack and the Kubernetes copy at full size at the same time. |
 | `ask` returns 409 | A question is already running in that session (Redis lock); wait or use a new session. |

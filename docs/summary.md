@@ -28,7 +28,10 @@ university policy), running entirely in Docker Compose:
   session state, run locks and ingest status, with a circuit breaker and a Postgres fallback.
 - **DevOps:** Dockerfiles (non-root, OpenShift-compatible), Compose with health checks and
   volumes, CI (lint, 75 tests, manifest render, builds, smoke test with a stub LLM, restart
-  check, GHCR push), Kubernetes manifests deployed and tested on Docker Desktop, OpenShift overlay.
+  check, GHCR push), Kubernetes manifests tested on Docker Desktop, and a **deployment on a real
+  OpenShift cluster** (Developer Sandbox): all pods under the `restricted-v2` SCC, HTTPS Route,
+  autoscaling 2→5 replicas across nodes, smoke test incl. Redis outage, and a rolling update and
+  rollback with 0 failed requests.
 - **Evaluation:** 11 cases (all 8 required behaviours) through the public API, agent vs a
   single-pass baseline on the same corpus, model and prompt: **agent 10/11, baseline 5/11**
   (judge 11/12 vs 6/12; the agent's one failure passed when re-run after a prompt fix);
@@ -51,10 +54,6 @@ university policy), running entirely in Docker Compose:
 
 ## Unfinished work and known limitations
 
-- **OpenShift on a real cluster:** the overlay (Route, arbitrary-UID compatibility) was tested
-  only on Kubernetes with an OpenShift-style UID; a Developer Sandbox deployment is in progress
-  (see the runbook).
-- **Autoscaling not demonstrated:** the HPA is defined, but Docker Desktop has no metrics-server.
 - **One eval run, 11 cases:** no variance estimate. The scored cases use precise phrasing;
   realistic vague phrasing was tested separately on 5 questions. Case 4 was used for prompt
   tuning (not held out). Case 8 failed in the main run and passed when re-run after a prompt fix.
@@ -65,8 +64,9 @@ university policy), running entirely in Docker Compose:
 - **No cross-session learning:** the agent adapts within a question (and keeps context within a
   session) but does not learn from past answers or feedback.
 - **No authentication or per-user corpora**; one shared library.
-- **Single-node storage** (`ReadWriteOnce`) and FastAPI background tasks for ingest; no OCR for
-  scanned PDFs.
+- **Ingest runs as a FastAPI background task** in the pod that received the upload (no worker
+  queue); if that pod dies mid-ingest the document stays `processing` and must be re-uploaded.
+  No OCR for scanned PDFs.
 - **Same-session follow-up detection:** when a clarification is pending, the next message is
   always treated as the reply (the agent handles an unrelated question gracefully, but there is
   no explicit "new question" detection).
