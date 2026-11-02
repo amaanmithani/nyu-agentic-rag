@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 NS="$(oc project -q)"
 echo "deploying into project: $NS"
-grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD)=' .env \
+grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD|APP_PASSWORD)=.+' .env \
   | oc create secret generic rag-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml \
   | oc apply -f -
 oc apply -k deploy/openshift

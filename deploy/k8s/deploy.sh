@@ -14,7 +14,7 @@ if [[ "${1:-}" != "--no-build" ]]; then
 fi
 
 kubectl --context "$CTX" create namespace "$NS" --dry-run=client -o yaml | kubectl --context "$CTX" apply -f -
-grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD)=' .env \
+grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD|APP_PASSWORD)=.+' .env \
   | k create secret generic rag-secrets --from-env-file=/dev/stdin --dry-run=client -o yaml \
   | k apply -f -
 

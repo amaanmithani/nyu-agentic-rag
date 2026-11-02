@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from app import db
+from app import auth, db
 from app.ingest import embedder
 from app.redis import get_redis
 from app.routes import chat, documents
@@ -32,6 +32,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Agentic RAG API", lifespan=lifespan)
+app.middleware("http")(auth.require_login)
+app.include_router(auth.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
 

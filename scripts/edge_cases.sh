@@ -4,12 +4,19 @@
 set -uo pipefail
 API="${API:-http://localhost:8000}"
 cd "$(dirname "$0")/.."
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+# Log in first when the app is password-protected (APP_PASSWORD from the env or .env).
+APP_PASSWORD="${APP_PASSWORD:-$(grep -E '^APP_PASSWORD=' .env 2>/dev/null | cut -d= -f2-)}"
+JAR="$(mktemp)"; trap 'rm -f "$JAR"' EXIT
+if [[ -n "$APP_PASSWORD" ]]; then
+  python3 -c 'import json,sys; print(json.dumps({"password": sys.argv[1]}))' "$APP_PASSWORD" \
+    | curl -fsS -c "$JAR" -H 'content-type: application/json' --data-binary @- "$API/auth/login" >/dev/null
+fi
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP" "$JAR"' EXIT
 fails=0
 check() { # name, expected, actual
   if [[ "$3" == "$2" ]]; then echo "PASS  $1"; else echo "FAIL  $1 (expected $2, got $3)"; fails=$((fails+1)); fi
 }
-code() { curl -s -o "$TMP/body" -w '%{http_code}' "$@"; }
+code() { curl -b "$JAR" -s -o "$TMP/body" -w '%{http_code}' "$@"; }
 j() { python3 -c "import json,sys; d=json.load(open('$TMP/body')); print($1)"; }
 
 echo "== uploads"
@@ -22,9 +29,9 @@ check "duplicate PDF detected"             True "$(code -F "files=@corpus/pdfs/o
 uv run -q --no-project --with reportlab python -c "
 from reportlab.pdfgen import canvas; c = canvas.Canvas('$TMP/scan.pdf'); c.rect(50, 50, 400, 600); c.showPage(); c.save()"
 ID=$(code -F "files=@$TMP/scan.pdf;type=application/pdf" "$API/documents" >/dev/null; j 'd["documents"][0]["doc_id"]')
-for _ in $(seq 1 30); do s=$(curl -s "$API/documents/$ID/status" | python3 -c 'import json,sys;print(json.load(sys.stdin)["status"])'); [[ $s == processing ]] || break; sleep 1; done
+for _ in $(seq 1 30); do s=$(curl -b "$JAR" -s "$API/documents/$ID/status" | python3 -c 'import json,sys;print(json.load(sys.stdin)["status"])'); [[ $s == processing ]] || break; sleep 1; done
 check "image-only PDF fails ingest cleanly" failed "$s"
-curl -s -o /dev/null -X DELETE "$API/documents/$ID"
+curl -b "$JAR" -s -o /dev/null -X DELETE "$API/documents/$ID"
 check "delete unknown document -> 404"     404 "$(code -X DELETE "$API/documents/does-not-exist")"
 
 echo "== search + cache invalidation"
@@ -35,8 +42,8 @@ code -X DELETE "$API/documents/northbridge-ai-policy-synthetic" >/dev/null
 code -G "$API/search" --data-urlencode "q=$Q" >/dev/null
 check "upload/delete invalidates cache (corpus_version)" False "$(j 'd["cached"]')"
 check "deleted document no longer retrievable" False "$(j 'any(h["doc_id"].startswith("northbridge") for h in d["hits"])')"
-curl -s -o /dev/null -F "files=@corpus/pdfs/northbridge-ai-policy-SYNTHETIC.pdf;type=application/pdf" -F "titles=" "$API/documents"
-for _ in $(seq 1 30); do s=$(curl -s "$API/documents/northbridge-ai-policy-synthetic/status" | python3 -c 'import json,sys;print(json.load(sys.stdin)["status"])'); [[ $s == processing ]] || break; sleep 1; done
+curl -b "$JAR" -s -o /dev/null -F "files=@corpus/pdfs/northbridge-ai-policy-SYNTHETIC.pdf;type=application/pdf" -F "titles=" "$API/documents"
+for _ in $(seq 1 30); do s=$(curl -b "$JAR" -s "$API/documents/northbridge-ai-policy-synthetic/status" | python3 -c 'import json,sys;print(json.load(sys.stdin)["status"])'); [[ $s == processing ]] || break; sleep 1; done
 check "re-upload restores document"        ready "$s"
 check "SQL-ish input is just text"         200 "$(code -G "$API/search" --data-urlencode "q='; DROP TABLE chunks; --")"
 check "search top_k out of range -> 422"   422 "$(code -G "$API/search" --data-urlencode "q=ai" --data-urlencode "top_k=99")"

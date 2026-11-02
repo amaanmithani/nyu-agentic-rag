@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import {
   ask,
   createSession,
+  getAuthStatus,
   getHealth,
   getRun,
   getSession,
+  logout,
   type Health,
   type TraceEvent,
 } from "./api/client";
 import Chat, { type Turn } from "./components/Chat";
 import DocumentsPanel from "./components/DocumentsPanel";
+import Login from "./components/Login";
 import TracePanel from "./components/TracePanel";
 
 const SESSION_KEY = "rag.session_id";
@@ -22,7 +25,29 @@ const DEMO_FAULT =
     ? "search_documents:error:3"
     : null;
 
+// Auth gate: when the server requires a password (APP_PASSWORD), show the login screen and
+// mount the workspace only after a successful login, so nothing loads before that.
 export default function App() {
+  const [auth, setAuth] = useState<{ required: boolean; authenticated: boolean } | null>(null);
+  const check = () =>
+    getAuthStatus()
+      .then(setAuth)
+      .catch(() => setAuth({ required: false, authenticated: true })); // API down: workspace shows it
+
+  useEffect(() => {
+    check();
+  }, []);
+
+  if (!auth) return null;
+  if (auth.required && !auth.authenticated) return <Login onSuccess={check} />;
+  return (
+    <Workspace
+      onLogout={auth.required ? () => logout().then(() => setAuth({ ...auth, authenticated: false })) : undefined}
+    />
+  );
+}
+
+function Workspace({ onLogout }: { onLogout?: () => void }) {
   const [health, setHealth] = useState<Health | null>(null);
   const [sid, setSid] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -132,6 +157,11 @@ export default function App() {
           <button onClick={newSession} className="rounded border border-slate-300 px-2 py-1 hover:bg-slate-100" disabled={busy}>
             New session
           </button>
+          {onLogout && (
+            <button onClick={onLogout} className="rounded border border-slate-300 px-2 py-1 hover:bg-slate-100" disabled={busy}>
+              Log out
+            </button>
+          )}
         </div>
       </header>
       {error && <div className="bg-red-50 px-4 py-1 text-xs text-red-700">{error}</div>}

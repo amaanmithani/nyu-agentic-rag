@@ -15,8 +15,9 @@ All outputs below are copied from real runs on a MacBook (Docker Desktop 29.2, C
 | What | Where | Notes |
 |---|---|---|
 | All settings | `.env` (copy of [.env.example](../.env.example)) | Model ids, limits (`MAX_STEPS`, `TOOL_TIMEOUT_S`, `TOOL_MAX_RETRIES`, `MAX_TOKENS_PER_RUN`, `RUN_DEADLINE_S`), `ALLOW_FAULT_INJECTION`, `IMAGE_TAG`. |
-| Secrets | `ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD` in `.env` | `.env` is gitignored (`.env.*` too, except `.env.example`). Compose injects it at runtime via `env_file`; **no secret is baked into an image**. Every commit was checked for `sk-ant-` strings before pushing. |
+| Secrets | `ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`, optional `APP_PASSWORD` (login) in `.env` | `.env` is gitignored (`.env.*` too, except `.env.example`). Compose injects it at runtime via `env_file`; **no secret is baked into an image**. Every commit was checked for `sk-ant-` strings before pushing. |
 | Kubernetes | Secret `rag-secrets` | `deploy/k8s/deploy.sh` pipes the two lines from `.env` into `kubectl create secret … --from-env-file=/dev/stdin`, so the values are never written to disk or the repo. Non-secret settings: ConfigMap `rag-config`. |
+| Login | `APP_PASSWORD` | Non-empty → the UI shows a login screen and the API returns 401 without a session cookie (`/health` stays public for probes). `scripts/*.sh` and the eval read it from `.env` and log in automatically. Verified: 5 wrong attempts → 429 (Redis `login_fail:{ip}`), spoofed `X-Forwarded-For` still locked, forged cookie → 401, HttpOnly cookie, 23/23 edge cases pass with login on. |
 | Production | | Set `ALLOW_FAULT_INJECTION=false` (requests with `fault_inject` are then rejected with 400). Use a secret manager (OpenShift/K8s Secrets backed by Vault or a cloud KMS). |
 
 ## Deploy (Docker Compose)

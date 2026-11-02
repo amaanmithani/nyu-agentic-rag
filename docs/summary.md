@@ -22,6 +22,8 @@ university policy), running entirely in Docker Compose:
 - **State and observability:** per-session turns, evidence, tool results and pending
   clarification (Redis + Postgres write-through); a live SSE execution trace in the UI; every run
   and step stored with timing, tokens and cost.
+- **Access control:** optional password login with HMAC-signed HttpOnly session cookies and a
+  Redis-backed brute-force lockout.
 - **Safety:** untrusted-content wrapping with a break-out guard and injection flagging,
   read-only SQL for tools, isolated sessions, configurable limits.
 - **Redis** for a search cache (invalidated by a Postgres corpus version), an embedding cache,
@@ -63,7 +65,9 @@ university policy), running entirely in Docker Compose:
   the returned passages and rephrasing, which worked in every observed case.
 - **No cross-session learning:** the agent adapts within a question (and keeps context within a
   session) but does not learn from past answers or feedback.
-- **No authentication or per-user corpora**; one shared library.
+- **One shared password, one shared library:** the optional login (`APP_PASSWORD`, Redis-backed
+  brute-force lockout) protects the deployment, but there are no individual user accounts,
+  roles or per-user corpora (production: NYU SSO via OIDC/SAML).
 - **Ingest runs as a FastAPI background task** in the pod that received the upload (no worker
   queue); if that pod dies mid-ingest the document stays `processing` and must be re-uploaded.
   No OCR for scanned PDFs.

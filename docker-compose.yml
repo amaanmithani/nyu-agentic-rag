@@ -39,6 +39,7 @@ services:
       UPLOAD_DIR: /data/uploads
       HF_HOME: /models
       FASTEMBED_CACHE_PATH: /models
+      APP_PASSWORD: ${APP_PASSWORD:-} # from .env or the shell; empty = no login
     volumes:
       - uploads:/data/uploads
       - model-cache:/models

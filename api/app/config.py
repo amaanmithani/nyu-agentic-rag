@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     run_deadline_s: float = 60.0
     fault_inject: str = ""
     allow_fault_injection: bool = False  # lets a request pass fault_inject (eval/demo only)
+    app_password: str = ""  # non-empty -> login required for the UI and API (see app/auth.py)
 
 
 @lru_cache

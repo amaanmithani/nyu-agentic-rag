@@ -48,6 +48,23 @@ async function json<T>(r: Response): Promise<T> {
   return r.json();
 }
 
+export type AuthStatus = { required: boolean; authenticated: boolean };
+
+export const getAuthStatus = () =>
+  fetch(`${API}/auth/status`).then((r) => json<AuthStatus>(r));
+
+export async function login(password: string): Promise<void> {
+  await json(
+    await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password }),
+    }),
+  );
+}
+
+export const logout = () => fetch(`${API}/auth/logout`, { method: "POST" });
+
 export const getHealth = () => fetch(`${API}/health`).then((r) => r.json() as Promise<Health>);
 
 export const listDocuments = () =>

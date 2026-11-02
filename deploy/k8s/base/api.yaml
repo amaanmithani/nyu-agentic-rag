@@ -43,6 +43,8 @@ spec:
               valueFrom: { secretKeyRef: { name: rag-secrets, key: ANTHROPIC_API_KEY } }
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: rag-secrets, key: POSTGRES_PASSWORD } }
+            - name: APP_PASSWORD # optional: login is off when the key is absent
+              valueFrom: { secretKeyRef: { name: rag-secrets, key: APP_PASSWORD, optional: true } }
             - name: DATABASE_URL # $(VAR) expands env vars defined above
               value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db:5432/$(POSTGRES_DB)
           securityContext:

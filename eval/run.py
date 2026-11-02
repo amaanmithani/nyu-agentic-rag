@@ -40,6 +40,12 @@ def load_env() -> None:
                 os.environ.setdefault(k.strip(), v.strip())
 
 
+def login_if_needed(http: httpx.Client) -> None:
+    """When the app is password-protected (APP_PASSWORD), log in; the client keeps the cookie."""
+    if os.environ.get("APP_PASSWORD"):
+        http.post("/auth/login", json={"password": os.environ["APP_PASSWORD"]}).raise_for_status()
+
+
 def post(http: httpx.Client, path: str, **kw) -> httpx.Response:
     """POST with up to 3 attempts on connection errors (e.g. the API container restarted)."""
     for attempt in range(3):
@@ -206,6 +212,7 @@ def main() -> None:
     judge = None if args.no_judge else anthropic.Anthropic()
 
     http = httpx.Client(base_url=args.api, timeout=180)
+    login_if_needed(http)
     health = http.get("/health").json()
     if health.get("models") != "ready":
         raise SystemExit(f"API not ready: {health}")

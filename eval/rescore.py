@@ -19,7 +19,7 @@ import httpx
 import yaml
 
 from eval.citation_check import check_turn, parse_verdict
-from eval.run import CASES, PAGE_CACHE, load_env, summarize, write_report
+from eval.run import CASES, PAGE_CACHE, load_env, login_if_needed, summarize, write_report
 from eval.score import score_answer
 
 
@@ -35,6 +35,7 @@ def main() -> None:
     if args.citation_llm:
         load_env()
         client, http = anthropic.Anthropic(), httpx.Client(base_url=args.api, timeout=60)
+        login_if_needed(http)
     specs = {c["id"]: c for c in yaml.safe_load(CASES.read_text())["cases"]}
     for r in data["results"]:
         case = specs[r["case"]]
