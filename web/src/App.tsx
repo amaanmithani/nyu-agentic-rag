@@ -13,6 +13,9 @@ import DocumentsPanel from "./components/DocumentsPanel";
 import TracePanel from "./components/TracePanel";
 
 const SESSION_KEY = "rag.session_id";
+// Hidden demo switch, never shown in the normal UI: open /?fault=search_documents:error:9 to
+// inject a tool failure into every question (the server also requires ALLOW_FAULT_INJECTION).
+const DEMO_FAULT = new URLSearchParams(window.location.search).get("fault");
 
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -73,7 +76,7 @@ export default function App() {
     setTraces((t) => ({ ...t, [i]: run.events.map((e) => ({ type: e.type, data: e.payload })) }));
   }
 
-  async function onAsk(question: string, fault: string | null) {
+  async function onAsk(question: string) {
     if (!sid) return;
     const index = turns.length;
     setTurns((t) => [...t, { question, running: true }]);
@@ -85,7 +88,7 @@ export default function App() {
       setTurns((ts) => ts.map((t, i) => (i === index ? { ...t, ...patch } : t)));
 
     try {
-      await ask(sid, question, fault, (e) => {
+      await ask(sid, question, DEMO_FAULT, (e) => {
         setTraces((t) => ({ ...t, [index]: [...(t[index] ?? []), e] }));
         if (e.type === "run_created") update({ runId: e.data.run_id });
         if (e.type === "clarification") update({ clarification: e.data as Turn["clarification"] });
@@ -115,6 +118,11 @@ export default function App() {
           </p>
         </div>
         <div className="flex items-center gap-3 text-[11px]">
+          {DEMO_FAULT && (
+            <span className="rounded bg-red-100 px-2 py-0.5 font-mono text-red-800" title="Demo link: tool failures are injected">
+              demo fault: {DEMO_FAULT}
+            </span>
+          )}
           <HealthBadge health={health} />
           <button onClick={newSession} className="rounded border border-slate-300 px-2 py-1 hover:bg-slate-100" disabled={busy}>
             New session

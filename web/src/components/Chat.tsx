@@ -12,25 +12,17 @@ export type Turn = {
   running?: boolean;
 };
 
-const FAULTS: { label: string; value: string | null }[] = [
-  { label: "No fault", value: null },
-  { label: "Search times out once (retry recovers)", value: "search_documents:timeout:1" },
-  { label: "Search fails every time", value: "search_documents:error:9" },
-  { label: "Page reads time out", value: "read_document_section:timeout:9" },
-];
-
 type Props = {
   turns: Turn[];
   selected: number | null;
   evidence: Record<string, string>;
   busy: boolean;
-  onAsk: (question: string, fault: string | null) => void;
+  onAsk: (question: string) => void;
   onSelect: (index: number) => void;
 };
 
 export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect }: Props) {
   const [text, setText] = useState("");
-  const [fault, setFault] = useState<string | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const pending = turns.at(-1)?.status === "clarification" ? turns.at(-1)?.clarification : null;
 
@@ -42,7 +34,7 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
 
   const submit = (q: string) => {
     if (!q.trim() || busy) return;
-    onAsk(q.trim(), fault);
+    onAsk(q.trim());
     setText("");
   };
 
@@ -53,8 +45,8 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
           <div className="mt-10 text-center text-sm text-slate-500">
             <p className="mb-3">Ask about AI risk management, federal AI policy, or generative-AI security. Try:</p>
             {[
-              "How quickly must agencies designate a Chief AI Officer under the 2024 and 2025 OMB memos?",
-              "Which risks does NIST say are unique to generative AI, and how does it describe prompt injection?",
+              "Do we need a Chief AI Officer, and how soon?",
+              "Is M-24-10 still in effect?",
               "What do I have to do before deploying my AI system?",
             ].map((q) => (
               <button
@@ -139,20 +131,6 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
             {busy ? "…" : "Ask"}
           </button>
         </div>
-        <label className="flex items-center gap-2 text-[11px] text-slate-500">
-          Demo: simulate tool failure
-          <select
-            value={fault ?? ""}
-            onChange={(e) => setFault(e.target.value || null)}
-            className="rounded border border-slate-300 bg-white px-1 py-0.5"
-          >
-            {FAULTS.map((f) => (
-              <option key={f.label} value={f.value ?? ""}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </label>
       </form>
     </section>
   );
