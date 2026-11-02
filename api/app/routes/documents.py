@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Query, Uplo
 from app.db import get_pool
 from app.ingest import pipeline
 from app.retrieval import hybrid_search
+from app.tools import corpus
 
 router = APIRouter()
 
@@ -53,6 +54,16 @@ def document_status(doc_id: str):
     if status is None:
         raise HTTPException(404, f"unknown document {doc_id!r}")
     return {"doc_id": doc_id} | status
+
+
+@router.get("/documents/{doc_id}/pages/{page}")
+def document_page(doc_id: str, page: int):
+    """Full text of one page (read-only). Lets a reader, or the eval's citation check, open
+    exactly the passage behind a [doc:page] citation."""
+    rows = corpus.get_pages(doc_id, page, page)
+    if not rows:
+        raise HTTPException(404, f"no page {page} in document {doc_id!r}")
+    return {"doc_id": doc_id, "page": page, "text": rows[0]["text"]}
 
 
 @router.delete("/documents/{doc_id}")

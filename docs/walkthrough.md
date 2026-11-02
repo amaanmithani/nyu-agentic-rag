@@ -115,8 +115,8 @@ four AI RMF functions vs the Northbridge policy's five).
 
 | Question | What happened |
 |---|---|
-| Do we need a Chief AI Officer, and how soon? | UI example; **not run during development**. Expected: 60 days, cited to both memos (the agent may first ask whether you are a federal agency). |
-| Is M-24-10 still in effect? | UI example; **not run during development**. Expected: no; M-25-21 rescinds and replaces it (`omb-m-25-21:1`). The closest scored case, 10-baseline-tie-rescind, passed for both modes. |
+| Do we need a Chief AI Officer, and how soon? | One search, then a targeted clarification: *"Is your organization a U.S. federal agency?"* (options: CFO Act agency / other federal agency / non-federal organization), since "we" is ambiguous and the requirement applies to agencies. Choosing an agency option gives the 60-day requirement from both memos (6.7 s, $0.021; run 122). |
+| Is M-24-10 still in effect? | *"No. OMB M-25-21 (April 3, 2025) says it 'rescinds and replaces' M-24-10"* `[omb-m-25-21:1]`, and notes the M-24-10 text does not mark itself as rescinded; 4/4 citations supported (6.1 s, $0.023; run 123). |
 | Can I use ChatGPT with student data? | Searched, read Northbridge pp. 1–3; approval from the AI Review Board required; 6/6 citations supported (8.7 s, $0.028). |
 | Do agencies have to tell people when an algorithm makes a decision about them? | Two searches (the second narrowed to M-25-21) + a page read; 10/10 citations supported (13.5 s, $0.044). |
 | What should we do about deepfakes made with our models? | Weak → rephrase (step 3); 23/23 supported (18.4 s, $0.056). |

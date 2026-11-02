@@ -15,3 +15,6 @@ build/
 # Downloaded corpus PDFs are reproducible via corpus/download.sh
 corpus/pdfs/
 *.tsbuildinfo
+
+# Private notes (interview prep), not part of the submission
+notes/

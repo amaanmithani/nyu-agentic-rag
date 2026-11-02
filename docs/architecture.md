@@ -143,9 +143,15 @@ It is a deliberate **lexical heuristic**, strict about numbers (a wrong figure i
 likely hallucination in policy text). Numbers that *identify* a source rather than state a
 requirement are ignored: dates ("March 28, 2024"), years 1980–2039, document ids ("M-24-10",
 "SP 800-218A"), executive orders and section numbers, plus numbers inside the cited doc ids.
-These rules came from false positives seen in live runs. Trade-off: a wrong *year* is no longer
-caught by the heuristic; it cannot judge paraphrased meaning, which is why the eval also uses an
-LLM judge. The UI colours chips green (supported), amber (unsupported) and red (not retrieved).
+These rules came from false positives seen in live runs. The UI colours chips green (supported),
+amber (unsupported) and red (not retrieved).
+
+A second, **semantic** layer runs in the eval (`eval/citation_check.py`): for each claim and
+cited page, the full page text (`GET /documents/{id}/pages/{page}`) and the claim go to
+`claude-haiku-5-5`, which judges supported / partial / unsupported (prompt in
+`eval/citation_judge_prompt.md`). It covers what the lexical check cannot: paraphrases,
+negative claims and wrong years. It is not run on every live answer to keep latency and cost
+down; with more time it could run asynchronously after each answer.
 
 ## Safety
 
@@ -220,4 +226,4 @@ blocked; the wrapper now distinguishes the two, with a test using redis-py seman
 | **No Celery**: FastAPI background tasks + Redis/Postgres job status | Enough for ~15 PDFs; one less moving part. | Production: a Redis-backed worker queue so ingest survives API restarts and scales separately. |
 | **SSE** for the trace | One-way server→browser stream over plain HTTP, proxied by nginx (`proxy_buffering off`); every event is also written to `trace_events` first, so a dropped connection loses nothing. | `EventSource` can't POST, so the UI reads the stream with `fetch`. |
 | **Baseline = same retrieval, model, system prompt and wrapping, tools disabled** | Isolates the value of the loop itself. | It cannot ask for clarification through a tool; it can only answer in text. |
-| **Cross-encoder `weak` threshold 0.0** | Calibrated on in- vs out-of-corpus queries on both corpora. | Narrow margin on policy text (−0.18 for an out-of-corpus question). |
+| **Cross-encoder `weak` threshold 0.0, as a hint** | Calibrated on in- vs out-of-corpus queries on both corpora; passages are always returned and the agent decides. | Vague questions and related-but-unanswerable ones overlap around 0 on policy text; a larger reranker (L-12) did not separate them either (see eval report). |

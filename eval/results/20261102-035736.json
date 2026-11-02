@@ -1,0 +1,805 @@
+{
+  "meta": {
+    "timestamp": "20261102-035736",
+    "model": "claude-sonnet-5-5",
+    "judge": "claude-haiku-5-5",
+    "api": "http://localhost:8000",
+    "corpus_docs": 11,
+    "judge_cost_usd": 0.0014,
+    "wall_clock_s": 32.7
+  },
+  "summary": {
+    "agent": {
+      "cases": 1,
+      "passed": 1,
+      "correct_judge": "1/1",
+      "citation_support": 1.0,
+      "citation_support_semantic": 1.0,
+      "citations_unsupported_semantic": 0,
+      "fabricated_citations": 0,
+      "completed": 1,
+      "turns": 1,
+      "avg_tool_calls": 7.0,
+      "avg_latency_s": 14.9,
+      "avg_tokens": 39212,
+      "total_cost_usd": 0.0384,
+      "cost_per_case_usd": 0.0384
+    },
+    "baseline": {
+      "cases": 1,
+      "passed": 1,
+      "correct_judge": "1/1",
+      "citation_support": null,
+      "citation_support_semantic": null,
+      "citations_unsupported_semantic": 0,
+      "fabricated_citations": 0,
+      "completed": 1,
+      "turns": 1,
+      "avg_tool_calls": 1.0,
+      "avg_latency_s": 4.28,
+      "avg_tokens": 3019,
+      "total_cost_usd": 0.0089,
+      "cost_per_case_usd": 0.0089
+    }
+  },
+  "results": [
+    {
+      "case": "8-tool-failure",
+      "category": "tool failure",
+      "mode": "agent",
+      "session_id": "nkqx0Sq1HeoYfK1dVBjUOw",
+      "turns": [
+        {
+          "question": "What are the five principles of the Blueprint for an AI Bill of Rights?",
+          "expected": "recover_or_partial",
+          "run": {
+            "run_id": 120,
+            "events": [
+              {
+                "type": "run_started",
+                "data": {
+                  "question": "What are the five principles of the Blueprint for an AI Bill of Rights?",
+                  "is_followup": false,
+                  "limits": {
+                    "max_steps": 8,
+                    "max_tokens": 60000,
+                    "deadline_s": 60.0,
+                    "tool_timeout_s": 5.0,
+                    "tool_max_retries": 2
+                  },
+                  "fault_inject": {
+                    "search_documents": [
+                      "error",
+                      0
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 1,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1932,
+                  "tokens": {
+                    "input": 4,
+                    "output": 95,
+                    "cache_read": 0,
+                    "cache_write": 2745,
+                    "total": 2844
+                  },
+                  "tool_calls": [
+                    "search_documents"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 1,
+                  "id": "toolu_01KvacbmaetXc54e4qkF8HxP",
+                  "tool": "search_documents",
+                  "args": {
+                    "query": "five principles Blueprint for an AI Bill of Rights",
+                    "purpose": "Identify the five principles"
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 1,
+                  "id": "toolu_01KvacbmaetXc54e4qkF8HxP",
+                  "tool": "search_documents",
+                  "status": "error",
+                  "summary": "error: failed after 3 attempt(s); last: transient error: injected fault (simulated connection drop)",
+                  "citations": [],
+                  "attempts": 3,
+                  "ms": 759,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 2,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1090,
+                  "tokens": {
+                    "input": 2,
+                    "output": 66,
+                    "cache_read": 2745,
+                    "cache_write": 145,
+                    "total": 2958
+                  },
+                  "tool_calls": [
+                    "search_documents"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 2,
+                  "id": "toolu_01PjeTaD1NecjRawym6xUQRU",
+                  "tool": "search_documents",
+                  "args": {
+                    "query": "Blueprint for an AI Bill of Rights five principles"
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 2,
+                  "id": "toolu_01PjeTaD1NecjRawym6xUQRU",
+                  "tool": "search_documents",
+                  "status": "error",
+                  "summary": "error: failed after 3 attempt(s); last: transient error: injected fault (simulated connection drop)",
+                  "citations": [],
+                  "attempts": 3,
+                  "ms": 752,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 3,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1026,
+                  "tokens": {
+                    "input": 2,
+                    "output": 27,
+                    "cache_read": 2890,
+                    "cache_write": 114,
+                    "total": 3033
+                  },
+                  "tool_calls": [
+                    "list_documents"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 3,
+                  "id": "toolu_012wjmfsBhwn9PZy2FuX31KX",
+                  "tool": "list_documents",
+                  "args": {}
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 3,
+                  "id": "toolu_012wjmfsBhwn9PZy2FuX31KX",
+                  "tool": "list_documents",
+                  "status": "ok",
+                  "summary": "ok: 11 documents available",
+                  "citations": [],
+                  "attempts": 1,
+                  "ms": 1,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 4,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1320,
+                  "tokens": {
+                    "input": 2,
+                    "output": 124,
+                    "cache_read": 3004,
+                    "cache_write": 690,
+                    "total": 3820
+                  },
+                  "tool_calls": [
+                    "search_documents"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 4,
+                  "id": "toolu_01KXEhyiPSEiMmQ8n3t5trfx",
+                  "tool": "search_documents",
+                  "args": {
+                    "query": "five principles safe and effective systems, algorithmic discrimination protections, data privacy, notice and explanation, human alternatives",
+                    "doc_ids": [
+                      "ai-bill-of-rights"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 4,
+                  "id": "toolu_01KXEhyiPSEiMmQ8n3t5trfx",
+                  "tool": "search_documents",
+                  "status": "error",
+                  "summary": "error: failed after 3 attempt(s); last: transient error: injected fault (simulated connection drop)",
+                  "citations": [],
+                  "attempts": 3,
+                  "ms": 752,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 5,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1398,
+                  "tokens": {
+                    "input": 2,
+                    "output": 128,
+                    "cache_read": 3694,
+                    "cache_write": 172,
+                    "total": 3996
+                  },
+                  "tool_calls": [
+                    "read_document_section"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 5,
+                  "id": "toolu_01LJ5kETgHhmigFuThZC5WvF",
+                  "tool": "read_document_section",
+                  "args": {
+                    "doc_id": "ai-bill-of-rights",
+                    "page_start": 3,
+                    "page_end": 4
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 5,
+                  "id": "toolu_01LJ5kETgHhmigFuThZC5WvF",
+                  "tool": "read_document_section",
+                  "status": "ok",
+                  "summary": "ok: read ai-bill-of-rights pages 3-4 [ai-bill-of-rights:3, ai-bill-of-rights:4]",
+                  "citations": [
+                    "ai-bill-of-rights:3",
+                    "ai-bill-of-rights:4"
+                  ],
+                  "attempts": 1,
+                  "ms": 3,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 6,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1360,
+                  "tokens": {
+                    "input": 2,
+                    "output": 121,
+                    "cache_read": 3866,
+                    "cache_write": 1829,
+                    "total": 5818
+                  },
+                  "tool_calls": [
+                    "read_document_section"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 6,
+                  "id": "toolu_01T3ErUiVaUJ4gLNmPW5BrxW",
+                  "tool": "read_document_section",
+                  "args": {
+                    "doc_id": "ai-bill-of-rights",
+                    "page_start": 5,
+                    "page_end": 6
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 6,
+                  "id": "toolu_01T3ErUiVaUJ4gLNmPW5BrxW",
+                  "tool": "read_document_section",
+                  "status": "ok",
+                  "summary": "ok: read ai-bill-of-rights pages 5-6 [ai-bill-of-rights:5, ai-bill-of-rights:6]",
+                  "citations": [
+                    "ai-bill-of-rights:5",
+                    "ai-bill-of-rights:6"
+                  ],
+                  "attempts": 1,
+                  "ms": 1,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 7,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "tool_use",
+                  "ms": 1250,
+                  "tokens": {
+                    "input": 2,
+                    "output": 84,
+                    "cache_read": 5695,
+                    "cache_write": 2051,
+                    "total": 7832
+                  },
+                  "tool_calls": [
+                    "read_document_section"
+                  ]
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 7,
+                  "id": "toolu_01WCsgKm1TLrBN8TuaiW6bZ3",
+                  "tool": "read_document_section",
+                  "args": {
+                    "doc_id": "ai-bill-of-rights",
+                    "page_start": 7
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 7,
+                  "id": "toolu_01WCsgKm1TLrBN8TuaiW6bZ3",
+                  "tool": "read_document_section",
+                  "status": "ok",
+                  "summary": "ok: read ai-bill-of-rights pages 7-7 [ai-bill-of-rights:7]",
+                  "citations": [
+                    "ai-bill-of-rights:7"
+                  ],
+                  "attempts": 1,
+                  "ms": 2,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 8,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "end_turn",
+                  "ms": 3192,
+                  "tokens": {
+                    "input": 2,
+                    "output": 490,
+                    "cache_read": 7746,
+                    "cache_write": 673,
+                    "total": 8911
+                  },
+                  "tool_calls": []
+                }
+              },
+              {
+                "type": "run_finished",
+                "data": {
+                  "status": "answered",
+                  "stop_reason": "answer",
+                  "answer": "The Blueprint for an AI Bill of Rights (OSTP, 2022) sets out five principles to guide the design, use, and deployment of automated systems [ai-bill-of-rights:4]:\n\n1. **Safe and Effective Systems.** You should be protected from unsafe or ineffective systems. The principle calls for pre-deployment testing, risk identification and mitigation, ongoing monitoring, and consultation with diverse communities and experts [ai-bill-of-rights:5].\n2. **Algorithmic Discrimination Protections.** You should not face discrimination by algorithms, and systems should be used and designed equitably. The principle calls for proactive equity assessments, representative data, and disparity testing [ai-bill-of-rights:5].\n3. **Data Privacy.** You should be protected from abusive data practices through built-in protections, and you should have agency over how your data is used [ai-bill-of-rights:6].\n4. **Notice and Explanation.** You should know when an automated system is being used, and you should understand how and why it contributes to outcomes that affect you [ai-bill-of-rights:6].\n5. **Human Alternatives, Consideration, and Fallback.** You should be able to opt out, where appropriate, and have access to a person who can quickly consider and remedy problems [ai-bill-of-rights:7].\n\nThe search tool failed repeatedly, so I read the document's pages 3\u20137 directly. The principles are covered on those pages, but I did not search the rest of the document.",
+                  "citations": {
+                    "total": 6,
+                    "supported": 6,
+                    "unsupported": 0,
+                    "not_retrieved": 0,
+                    "all_supported": true,
+                    "checks": [
+                      {
+                        "key": "ai-bill-of-rights:4",
+                        "status": "supported",
+                        "reason": "word overlap 83%",
+                        "sentence": "The Blueprint for an AI Bill of Rights (OSTP, 2022) sets out five principles to guide the design, use, and deployment of automated systems [ai-bill-of-rights:4]:"
+                      },
+                      {
+                        "key": "ai-bill-of-rights:5",
+                        "status": "supported",
+                        "reason": "word overlap 85%",
+                        "sentence": "The principle calls for pre-deployment testing, risk identification and mitigation, ongoing monitoring, and consultation with diverse communities and experts [ai-bill-of-rights:5]."
+                      },
+                      {
+                        "key": "ai-bill-of-rights:5",
+                        "status": "supported",
+                        "reason": "word overlap 78%",
+                        "sentence": "The principle calls for proactive equity assessments, representative data, and disparity testing [ai-bill-of-rights:5]."
+                      },
+                      {
+                        "key": "ai-bill-of-rights:6",
+                        "status": "supported",
+                        "reason": "word overlap 100%",
+                        "sentence": "**Data Privacy.** You should be protected from abusive data practices through built-in protections, and you should have agency over how your data is used [ai-bill-of-rights:6]."
+                      },
+                      {
+                        "key": "ai-bill-of-rights:6",
+                        "status": "supported",
+                        "reason": "word overlap 90%",
+                        "sentence": "**Notice and Explanation.** You should know when an automated system is being used, and you should understand how and why it contributes to outcomes that affect you [ai-bill-of-rights:6]."
+                      },
+                      {
+                        "key": "ai-bill-of-rights:7",
+                        "status": "supported",
+                        "reason": "word overlap 100%",
+                        "sentence": "**Human Alternatives, Consideration, and Fallback.** You should be able to opt out, where appropriate, and have access to a person who can quickly consider and remedy problems [ai-bill-of-rights:7]."
+                      }
+                    ]
+                  },
+                  "steps": 8,
+                  "tool_calls": 7,
+                  "tokens": {
+                    "input": 18,
+                    "output": 1135,
+                    "cache_read": 29640,
+                    "cache_write": 8419,
+                    "total": 39212
+                  },
+                  "cost_usd": 0.038361,
+                  "latency_ms": 14896,
+                  "model": "claude-sonnet-5-5"
+                }
+              },
+              {
+                "type": "done",
+                "data": {
+                  "run_id": 120,
+                  "status": "answered",
+                  "pending_clarification": null
+                }
+              }
+            ],
+            "status": "answered",
+            "stop_reason": "answer",
+            "answer": "The Blueprint for an AI Bill of Rights (OSTP, 2022) sets out five principles to guide the design, use, and deployment of automated systems [ai-bill-of-rights:4]:\n\n1. **Safe and Effective Systems.** You should be protected from unsafe or ineffective systems. The principle calls for pre-deployment testing, risk identification and mitigation, ongoing monitoring, and consultation with diverse communities and experts [ai-bill-of-rights:5].\n2. **Algorithmic Discrimination Protections.** You should not face discrimination by algorithms, and systems should be used and designed equitably. The principle calls for proactive equity assessments, representative data, and disparity testing [ai-bill-of-rights:5].\n3. **Data Privacy.** You should be protected from abusive data practices through built-in protections, and you should have agency over how your data is used [ai-bill-of-rights:6].\n4. **Notice and Explanation.** You should know when an automated system is being used, and you should understand how and why it contributes to outcomes that affect you [ai-bill-of-rights:6].\n5. **Human Alternatives, Consideration, and Fallback.** You should be able to opt out, where appropriate, and have access to a person who can quickly consider and remedy problems [ai-bill-of-rights:7].\n\nThe search tool failed repeatedly, so I read the document's pages 3\u20137 directly. The principles are covered on those pages, but I did not search the rest of the document.",
+            "citations": {
+              "total": 6,
+              "supported": 6,
+              "unsupported": 0,
+              "not_retrieved": 0,
+              "all_supported": true,
+              "checks": [
+                {
+                  "key": "ai-bill-of-rights:4",
+                  "status": "supported",
+                  "reason": "word overlap 83%",
+                  "sentence": "The Blueprint for an AI Bill of Rights (OSTP, 2022) sets out five principles to guide the design, use, and deployment of automated systems [ai-bill-of-rights:4]:"
+                },
+                {
+                  "key": "ai-bill-of-rights:5",
+                  "status": "supported",
+                  "reason": "word overlap 85%",
+                  "sentence": "The principle calls for pre-deployment testing, risk identification and mitigation, ongoing monitoring, and consultation with diverse communities and experts [ai-bill-of-rights:5]."
+                },
+                {
+                  "key": "ai-bill-of-rights:5",
+                  "status": "supported",
+                  "reason": "word overlap 78%",
+                  "sentence": "The principle calls for proactive equity assessments, representative data, and disparity testing [ai-bill-of-rights:5]."
+                },
+                {
+                  "key": "ai-bill-of-rights:6",
+                  "status": "supported",
+                  "reason": "word overlap 100%",
+                  "sentence": "**Data Privacy.** You should be protected from abusive data practices through built-in protections, and you should have agency over how your data is used [ai-bill-of-rights:6]."
+                },
+                {
+                  "key": "ai-bill-of-rights:6",
+                  "status": "supported",
+                  "reason": "word overlap 90%",
+                  "sentence": "**Notice and Explanation.** You should know when an automated system is being used, and you should understand how and why it contributes to outcomes that affect you [ai-bill-of-rights:6]."
+                },
+                {
+                  "key": "ai-bill-of-rights:7",
+                  "status": "supported",
+                  "reason": "word overlap 100%",
+                  "sentence": "**Human Alternatives, Consideration, and Fallback.** You should be able to opt out, where appropriate, and have access to a person who can quickly consider and remedy problems [ai-bill-of-rights:7]."
+                }
+              ]
+            },
+            "steps": 8,
+            "tool_calls": 7,
+            "tokens": {
+              "input": 18,
+              "output": 1135,
+              "cache_read": 29640,
+              "cache_write": 8419,
+              "total": 39212
+            },
+            "cost_usd": 0.038361,
+            "latency_ms": 14896,
+            "model": "claude-sonnet-5-5"
+          },
+          "score": {
+            "pass": true,
+            "checks": {
+              "behavior": true,
+              "facts": true,
+              "sources": true,
+              "min_docs": true,
+              "no_fabricated_citations": true,
+              "forbidden": true,
+              "judge": true
+            },
+            "observed_behavior": "answer",
+            "citation_support": 1.0,
+            "cited": [
+              "ai-bill-of-rights:4",
+              "ai-bill-of-rights:5",
+              "ai-bill-of-rights:6",
+              "ai-bill-of-rights:7"
+            ],
+            "notes": [],
+            "judge": {
+              "behavior": "recover_or_partial",
+              "correct": true,
+              "reason": "After the search tool failed repeatedly, the system read pages 3-7 directly, gave the five correct principles with page citations, and disclosed that it did not search the rest of the document."
+            }
+          },
+          "judge_usage": {
+            "input": 1097,
+            "output": 389
+          },
+          "citation_llm": {
+            "checks": [
+              {
+                "key": "ai-bill-of-rights:4",
+                "sentence": "The Blueprint for an AI Bill of Rights (OSTP, 2022) sets out five principles to guide the design, use, and deployment of automated systems [ai-bill-of-rights:4]:",
+                "verdict": "supported",
+                "reason": "The page states that the Blueprint is a set of five principles and associated practices to help guide the design, use, and deployment of automated systems.' The page does not explicitly name OSTP as the author in that sentence, but it refers to the White House Office of Science and Technology Policy leading the process, so the attribution is supported."
+              },
+              {
+                "key": "ai-bill-of-rights:5",
+                "sentence": "The principle calls for pre-deployment testing, risk identification and mitigation, ongoing monitoring, and consultation with diverse communities and experts [ai-bill-of-rights:5].",
+                "verdict": "supported",
+                "reason": "The page states that systems should undergo pre-deployment testing, risk identification and mitigation, and ongoing monitoring, and should be developed with consultation from diverse communities, stakeholders, and domain experts, matching the claim."
+              },
+              {
+                "key": "ai-bill-of-rights:5",
+                "sentence": "The principle calls for proactive equity assessments, representative data, and disparity testing [ai-bill-of-rights:5].",
+                "verdict": "supported",
+                "reason": "The algorithmic discrimination protections section on this page states that the protection should include proactive equity assessments, use of representative data, and pre-deployment and ongoing disparity testing and mitigation."
+              },
+              {
+                "key": "ai-bill-of-rights:6",
+                "sentence": "**Data Privacy.** You should be protected from abusive data practices through built-in protections, and you should have agency over how your data is used [ai-bill-of-rights:6].",
+                "verdict": "supported",
+                "reason": "The page's Data Privacy section states that you should be protected from abusive data practices via built-in protections and should have agency over how data about you is used, matching the claim."
+              },
+              {
+                "key": "ai-bill-of-rights:6",
+                "sentence": "**Notice and Explanation.** You should know when an automated system is being used, and you should understand how and why it contributes to outcomes that affect you [ai-bill-of-rights:6].",
+                "verdict": "supported",
+                "reason": "The page's Notice and Explanation section states that people should know an automated system is being used and understand how and why it contributes to outcomes that impact them, closely matching the claim."
+              },
+              {
+                "key": "ai-bill-of-rights:7",
+                "sentence": "**Human Alternatives, Consideration, and Fallback.** You should be able to opt out, where appropriate, and have access to a person who can quickly consider and remedy problems [ai-bill-of-rights:7].",
+                "verdict": "supported",
+                "reason": "The page's section title and opening sentence state that you should be able to opt out where appropriate and have access to a person who can quickly consider and remedy problems, matching the claim nearly verbatim."
+              }
+            ],
+            "usage": {
+              "input": 7561,
+              "output": 500
+            }
+          }
+        }
+      ],
+      "pass": true
+    },
+    {
+      "case": "8-tool-failure",
+      "category": "tool failure",
+      "mode": "baseline",
+      "session_id": "hKUEES4fjCN06diG5xukcA",
+      "turns": [
+        {
+          "question": "What are the five principles of the Blueprint for an AI Bill of Rights?",
+          "expected": "recover_or_partial",
+          "run": {
+            "run_id": 121,
+            "events": [
+              {
+                "type": "run_started",
+                "data": {
+                  "question": "What are the five principles of the Blueprint for an AI Bill of Rights?",
+                  "mode": "baseline",
+                  "is_followup": false,
+                  "limits": {
+                    "max_steps": 1,
+                    "max_tokens": 60000,
+                    "deadline_s": 60.0,
+                    "tool_timeout_s": 5.0,
+                    "tool_max_retries": 2
+                  },
+                  "fault_inject": {
+                    "search_documents": [
+                      "error",
+                      6
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "tool_call",
+                "data": {
+                  "step": 1,
+                  "id": "baseline_search",
+                  "tool": "search_documents",
+                  "args": {
+                    "query": "What are the five principles of the Blueprint for an AI Bill of Rights?",
+                    "top_k": 5
+                  }
+                }
+              },
+              {
+                "type": "tool_result",
+                "data": {
+                  "step": 1,
+                  "id": "baseline_search",
+                  "tool": "search_documents",
+                  "status": "error",
+                  "summary": "error: failed after 3 attempt(s); last: transient error: injected fault (simulated connection drop)",
+                  "citations": [],
+                  "attempts": 3,
+                  "ms": 752,
+                  "injection_flags": []
+                }
+              },
+              {
+                "type": "llm_call",
+                "data": {
+                  "step": 1,
+                  "model": "claude-sonnet-5-5",
+                  "stop_reason": "end_turn",
+                  "ms": 3509,
+                  "tokens": {
+                    "input": 4,
+                    "output": 175,
+                    "cache_read": 0,
+                    "cache_write": 2840,
+                    "total": 3019
+                  },
+                  "tool_calls": []
+                }
+              },
+              {
+                "type": "run_finished",
+                "data": {
+                  "status": "answered",
+                  "stop_reason": "answer",
+                  "answer": "The documents I could access don't let me answer this. The retrieval step failed with a connection error after 3 attempts and returned no passages. Tools are disabled in this mode, so I couldn't retry or read the documents directly.\n\nI can't list the five principles of the Blueprint for an AI Bill of Rights without a supporting passage and page citation. Listing them from memory would break the rule that answers come only from the uploaded documents.\n\nIf you ask again, or switch to a mode with tools enabled, I can search the corpus and give you the five principles with citations.",
+                  "citations": {
+                    "total": 0,
+                    "supported": 0,
+                    "unsupported": 0,
+                    "not_retrieved": 0,
+                    "all_supported": false,
+                    "checks": []
+                  },
+                  "steps": 1,
+                  "tool_calls": 1,
+                  "tokens": {
+                    "input": 4,
+                    "output": 175,
+                    "cache_read": 0,
+                    "cache_write": 2840,
+                    "total": 3019
+                  },
+                  "cost_usd": 0.008858,
+                  "latency_ms": 4275,
+                  "model": "claude-sonnet-5-5"
+                }
+              },
+              {
+                "type": "done",
+                "data": {
+                  "run_id": 121,
+                  "status": "answered",
+                  "pending_clarification": null
+                }
+              }
+            ],
+            "status": "answered",
+            "stop_reason": "answer",
+            "answer": "The documents I could access don't let me answer this. The retrieval step failed with a connection error after 3 attempts and returned no passages. Tools are disabled in this mode, so I couldn't retry or read the documents directly.\n\nI can't list the five principles of the Blueprint for an AI Bill of Rights without a supporting passage and page citation. Listing them from memory would break the rule that answers come only from the uploaded documents.\n\nIf you ask again, or switch to a mode with tools enabled, I can search the corpus and give you the five principles with citations.",
+            "citations": {
+              "total": 0,
+              "supported": 0,
+              "unsupported": 0,
+              "not_retrieved": 0,
+              "all_supported": false,
+              "checks": []
+            },
+            "steps": 1,
+            "tool_calls": 1,
+            "tokens": {
+              "input": 4,
+              "output": 175,
+              "cache_read": 0,
+              "cache_write": 2840,
+              "total": 3019
+            },
+            "cost_usd": 0.008858,
+            "latency_ms": 4275,
+            "model": "claude-sonnet-5-5"
+          },
+          "score": {
+            "pass": true,
+            "checks": {
+              "behavior": true,
+              "facts": true,
+              "sources": true,
+              "min_docs": true,
+              "no_fabricated_citations": true,
+              "forbidden": true,
+              "judge": true
+            },
+            "observed_behavior": "answer",
+            "citation_support": null,
+            "cited": [],
+            "notes": [],
+            "judge": {
+              "behavior": "partial",
+              "correct": true,
+              "reason": "A tool (retrieval) failed, and the system clearly reported that it could not complete the task and what is missing, without presenting an unverified answer as complete, which matches the expected recover_or_partial outcome acceptably."
+            }
+          },
+          "judge_usage": {
+            "input": 782,
+            "output": 93
+          },
+          "citation_llm": {
+            "checks": [],
+            "usage": {
+              "input": 0,
+              "output": 0
+            }
+          }
+        }
+      ],
+      "pass": true
+    }
+  ]
+}

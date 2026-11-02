@@ -15,9 +15,10 @@ Docker Compose · GitHub Actions · Kubernetes/OpenShift manifests.
 
 | | Agent | Single-pass baseline |
 |---|---|---|
-| Eval cases passed (11 cases) | **10/11** | 5/11 |
+| Eval cases passed (11 cases) | **10/11** (11/11 after the case-8 fix, re-run) | 5/11 |
 | Judged correct (LLM judge, 12 turns) | **11/12** | 6/12 |
-| Fabricated citations | 0 | 0 |
+| Citations supported by the cited page (semantic check) | **94%** (0 unsupported) | 91% (1 unsupported) |
+| Fabricated citations (page never retrieved) | 0 | 0 |
 | Avg latency / cost per case | 9.2 s / $0.034 | 5.1 s / $0.020 |
 
 Details and failure analysis: [docs/eval-report.md](docs/eval-report.md).
@@ -48,7 +49,7 @@ To demonstrate tool failure + bounded retry live, open **http://localhost:8080/?
 | [docs/eval-report.md](docs/eval-report.md) | 11 cases, agent vs baseline, per-case results, failure analysis, traces, exclusions |
 | [docs/walkthrough.md](docs/walkthrough.md) | Reproducible demo: multi-doc, re-retrieval, weak→rephrase, clarification, failed tool call, injection, conflict |
 | [docs/runbook.md](docs/runbook.md) | Deploy / verify / update / rollback, health output, end-to-end request, persistence, Redis outage, logging, scaling, CI, Kubernetes, OpenShift |
-| [docs/summary.md](docs/summary.md) | What was built, what's unfinished, next steps, interview cheat sheet |
+| [docs/summary.md](docs/summary.md) | What was built, what was prioritized, limitations, next steps |
 | [corpus/SOURCES.md](corpus/SOURCES.md) | Corpus sources, why this corpus, the synthetic document |
 
 ## Repository layout

@@ -20,12 +20,14 @@ import anthropic
 import httpx
 import yaml
 
+from eval.citation_check import check_turn, support_rate
 from eval.score import JUDGE_MODEL, judge_answer, score_answer
 
 ROOT = Path(__file__).resolve().parent.parent
 CASES = Path(__file__).parent / "cases.yaml"
 RESULTS = Path(__file__).parent / "results"
 JUDGE_PRICE = {"in": 0.10, "out": 0.50}  # claude-haiku-5-5, USD per MTok
+PAGE_CACHE: dict = {}  # cited page texts, shared across cases
 
 
 def load_env() -> None:
@@ -84,6 +86,7 @@ def run_case(http, judge_client, case: dict, mode: str) -> dict:
         if judge_client:
             verdict, judge_usage = judge_answer(judge_client, question, spec, run["answer"])
         scored = score_answer(spec, run, verdict)
+        cit = check_turn(judge_client, http, run, PAGE_CACHE) if judge_client else None
         out["turns"].append(
             {
                 "question": question,
@@ -91,6 +94,7 @@ def run_case(http, judge_client, case: dict, mode: str) -> dict:
                 "run": run,
                 "score": scored,
                 "judge_usage": judge_usage,
+                "citation_llm": cit,
             }
         )
         print(
@@ -110,12 +114,15 @@ def summarize(results: list[dict], mode: str) -> dict:
         t["score"]["citation_support"] for t in turns if t["score"]["citation_support"] is not None
     ]
     judged = [t["score"]["checks"]["judge"] for t in turns if "judge" in t["score"]["checks"]]
+    llm_checks = [c for t in turns if t.get("citation_llm") for c in t["citation_llm"]["checks"]]
     n = len(rs) or 1
     return {
         "cases": len(rs),
         "passed": sum(r["pass"] for r in rs),
         "correct_judge": f"{sum(judged)}/{len(judged)}" if judged else "n/a",
         "citation_support": round(sum(support) / len(support), 3) if support else None,
+        "citation_support_semantic": support_rate(llm_checks),
+        "citations_unsupported_semantic": sum(c["verdict"] == "unsupported" for c in llm_checks),
         "fabricated_citations": sum(r["citations"].get("not_retrieved", 0) for r in runs),
         "completed": sum(r["status"] in ("answered", "clarification") for r in runs),
         "turns": len(runs),
@@ -215,14 +222,11 @@ def main() -> None:
             partial.write_text(json.dumps(results, default=str))  # nothing lost if interrupted
 
     judge_cost = sum(
-        (
-            t["judge_usage"]["input"] * JUDGE_PRICE["in"]
-            + t["judge_usage"]["output"] * JUDGE_PRICE["out"]
-        )
-        / 1e6
+        (u["input"] * JUDGE_PRICE["in"] + u["output"] * JUDGE_PRICE["out"]) / 1e6
         for r in results
         for t in r["turns"]
-        if t["judge_usage"]
+        for u in [t["judge_usage"], (t.get("citation_llm") or {}).get("usage")]
+        if u
     )
     summaries = {m: summarize(results, m) for m in modes}
     first_run = results[0]["turns"][0]["run"] if results else {}
