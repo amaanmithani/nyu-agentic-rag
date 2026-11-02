@@ -1,0 +1,17 @@
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+.DS_Store
+
+# Secrets: real env files are never committed; the template is.
+.env
+.env.*
+!.env.example
+
+# Downloaded corpus PDFs are reproducible via corpus/download.sh
+corpus/pdfs/
+*.tsbuildinfo
