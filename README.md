@@ -11,7 +11,7 @@ pages, asks for clarification when the answer depends on who is asking, and answ
 
 Stack: React + Vite + TypeScript + Tailwind (nginx) · FastAPI (Python 3.12, uv) · PostgreSQL 16 +
 pgvector · Redis 7 · Claude Sonnet 5.5 · local fastembed embeddings + cross-encoder reranker ·
-Docker Compose · GitHub Actions · Kubernetes/OpenShift manifests.
+Docker Compose · GitHub Actions · Kubernetes · **deployed and verified on Red Hat OpenShift**.
 
 | | Agent | Single-pass baseline |
 |---|---|---|
@@ -29,7 +29,7 @@ Prerequisites: Docker Desktop (8 GB RAM for Docker), [uv](https://docs.astral.sh
 Anthropic API key.
 
 ```bash
-cp .env.example .env              # then set ANTHROPIC_API_KEY=... and a POSTGRES_PASSWORD
+cp .env.example .env              # set ANTHROPIC_API_KEY, POSTGRES_PASSWORD (and APP_PASSWORD for a login)
 ./corpus/download.sh              # 10 public PDFs, SHA256-verified, + the synthetic policy
 docker compose up -d --build      # db, redis, api, web (first start downloads ~200 MB of models)
 ./scripts/seed.sh                 # uploads the corpus through the API (~2 min on CPU)
@@ -40,6 +40,27 @@ Try: *"Do we need a Chief AI Officer, and how soon?"*, *"Is M-24-10 still in eff
 *"What do I have to do before deploying my AI system?"* (asks a clarifying question).
 To demonstrate tool failure + bounded retry live, open **http://localhost:8080/?demo=failure**
 (hidden demo mode; the server only accepts it when `ALLOW_FAULT_INJECTION=true`).
+If `APP_PASSWORD` is set, the app opens on a login screen (see [Access control](#access-control)).
+
+## Deployment: Compose, Kubernetes, OpenShift
+
+| Target | How | Verified |
+|---|---|---|
+| **Docker Compose** (the reference deployment) | `docker compose up -d --build` | health checks, smoke test incl. Redis outage, persistence across `down`/`up`, CI on every push |
+| **Kubernetes** (Docker Desktop) | `./deploy/k8s/deploy.sh` (kustomize `deploy/k8s/overlays/local`) | all pods as an arbitrary non-root UID, smoke test incl. Redis outage, rolling update + rollback, data kept after deleting db/api pods |
+| **Red Hat OpenShift** (Developer Sandbox, multi-node AWS) | `oc login …` then `./deploy/openshift/deploy.sh` (base + HTTPS Route) | every pod admitted under the **`restricted-v2` SCC** with an OpenShift-assigned UID; edge-TLS Route (HTTP→HTTPS, Let's Encrypt); **HPA scaled the API 2→5 replicas** under ingest load across nodes; smoke test incl. Redis outage over HTTPS; rolling update and `oc rollout undo` with **0 failed requests** (341/341, 338/338); login enforced on the public URL |
+
+Images are built by CI and pushed to GHCR (`ghcr.io/<owner>/nyu-agentic-rag-{api,web}:<sha>` and
+`:latest`); the same images run in all three. The OpenShift deployment also surfaced a real
+multi-node bug (shared `ReadWriteOnce` volumes blocked scale-out with a Multi-Attach error), fixed
+by making the API stateless. Commands, outputs and details: [docs/runbook.md](docs/runbook.md).
+
+## Access control
+
+Optional shared-password login: set `APP_PASSWORD` and every route except `/health` requires an
+HMAC-signed, HttpOnly (and over HTTPS, Secure) session cookie. Wrong attempts are counted per
+client IP in Redis; 5 failures lock that IP out for 5 minutes. Empty `APP_PASSWORD` turns login off
+(local development, CI). Details: [docs/architecture.md](docs/architecture.md#safety).
 
 ## Documentation
 

@@ -153,6 +153,23 @@ cited page, the full page text (`GET /documents/{id}/pages/{page}`) and the clai
 negative claims and wrong years. It is not run on every live answer to keep latency and cost
 down; with more time it could run asynchronously after each answer.
 
+## Deployment topology
+
+```
+Browser ──HTTPS──▶ OpenShift Route (edge TLS) ──▶ web (nginx, 2 replicas) ──/api──▶ api (FastAPI, 2–5 replicas, HPA on CPU)
+                                                                                   │            │
+                                                                       Postgres+pgvector     Redis
+                                                                       (StatefulSet + PVC)  (Deployment)
+```
+
+The same images and kustomize base run on Docker Desktop Kubernetes and OpenShift
+(`deploy/k8s/base`, overlays `local` and `openshift`). The API is **stateless**: shared state is
+in Postgres (documents, chunks, sessions, runs, traces) and Redis (caches, session fast path,
+locks, login counters); uploads and model files use per-pod `emptyDir`, so replicas can run on
+any node. Only Postgres has a persistent volume. All pods run non-root with dropped capabilities
+and a RuntimeDefault seccomp profile, which is what OpenShift's `restricted-v2` SCC requires.
+Results of the real OpenShift deployment: [runbook.md](runbook.md#openshift-developer-sandbox-results).
+
 ## Safety
 
 | Concern | Mechanism |
