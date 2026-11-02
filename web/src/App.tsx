@@ -13,9 +13,14 @@ import DocumentsPanel from "./components/DocumentsPanel";
 import TracePanel from "./components/TracePanel";
 
 const SESSION_KEY = "rag.session_id";
-// Hidden demo switch, never shown in the normal UI: open /?fault=search_documents:error:9 to
-// inject a tool failure into every question (the server also requires ALLOW_FAULT_INJECTION).
-const DEMO_FAULT = new URLSearchParams(window.location.search).get("fault");
+// Hidden demo switch, never shown in the normal UI. Opening /?demo=failure makes the first
+// search of each question fail all 3 attempts (bounded retry), after which later searches
+// work, so one question shows failure, retry limit, recovery and the honest report.
+// The server only accepts it when ALLOW_FAULT_INJECTION=true.
+const DEMO_FAULT =
+  new URLSearchParams(window.location.search).get("demo") === "failure"
+    ? "search_documents:error:3"
+    : null;
 
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -119,8 +124,8 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3 text-[11px]">
           {DEMO_FAULT && (
-            <span className="rounded bg-red-100 px-2 py-0.5 font-mono text-red-800" title="Demo link: tool failures are injected">
-              demo fault: {DEMO_FAULT}
+            <span className="rounded bg-red-100 px-2 py-0.5 text-red-800" title={DEMO_FAULT}>
+              Demo mode: simulated tool failure
             </span>
           )}
           <HealthBadge health={health} />
