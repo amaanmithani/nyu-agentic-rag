@@ -52,6 +52,12 @@ class SearchDocumentsInput(BaseModel):
         "list_documents). Omit to search the whole corpus.",
     )
     top_k: int = Field(default=5, ge=1, le=10, description="Number of passages (1-10).")
+    purpose: str | None = Field(
+        default=None,
+        max_length=200,
+        description="The sub-question this search is for, in a few words (shown to the "
+        "user in the execution trace). Not used for retrieval.",
+    )
 
     @field_validator("query")
     @classmethod

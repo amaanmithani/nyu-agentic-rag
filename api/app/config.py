@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-sonnet-5-5"
     llm_provider: str = "anthropic"  # "anthropic" | "stub"
+    llm_effort: str = "medium"  # low | medium | high | xhigh | max
 
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     rerank_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"

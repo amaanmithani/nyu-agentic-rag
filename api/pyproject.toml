@@ -12,6 +12,7 @@ dependencies = [
     "pypdf>=6.21.4",
     "fastembed>=0.9.1",
     "python-multipart>=0.0.33",
+    "anthropic>=2.3.0",
 ]
 
 [dependency-groups]
