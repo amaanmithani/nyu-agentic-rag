@@ -6,6 +6,11 @@
 set -euo pipefail
 API="${API:-http://localhost:8000}"
 WEB="${WEB:-http://localhost:8080}"
+# How to take Redis down/up for the outage check (defaults: Docker Compose). For Kubernetes:
+#   REDIS_STOP="kubectl -n agentic-rag scale deploy/redis --replicas=0 && kubectl -n agentic-rag wait --for=delete pod -l app=redis"
+#   REDIS_START="kubectl -n agentic-rag scale deploy/redis --replicas=1"
+REDIS_STOP="${REDIS_STOP:-docker compose stop redis}"
+REDIS_START="${REDIS_START:-docker compose start redis}"
 cd "$(dirname "$0")/.."
 
 j() { python3 -c "import json,sys; d=json.load(sys.stdin); print($1)"; }
@@ -42,7 +47,7 @@ echo "   $ANSWER"
 [[ "$ANSWER" == *"[$DOC:"* ]] || fail "answer has no citation to $DOC"
 
 echo "4) redis outage"
-docker compose stop redis >/dev/null 2>&1
+eval "$REDIS_STOP" >/dev/null 2>&1
 curl -fsS "$API/health" | tee /dev/stderr | grep -q '"redis":"degraded"' || fail "health not degraded"
 echo
 ANSWER=$(ASK "What does the policy say about approving generative AI tools?")
@@ -50,6 +55,6 @@ ANSWER=$(ASK "What does the policy say about approving generative AI tools?")
 SOURCE=$(curl -fsS "$API/sessions/$SID" | j 'd["state_source"]')
 [[ "$SOURCE" == "postgres" ]] || fail "state source $SOURCE"
 echo "   answered with redis down; session state served from $SOURCE"
-docker compose start redis >/dev/null 2>&1
+eval "$REDIS_START" >/dev/null 2>&1
 
 echo "SMOKE OK"

@@ -1,0 +1,18 @@
+# OpenShift: the same base manifests plus a Route. No runAsUser is set: OpenShift's
+# restricted SCC assigns a random UID, and the images are built for that (non-root,
+# group-0-writable dirs, nginx on 8080). Tested locally by the "local" overlay, which forces
+# such a UID; the Route itself is not exercised outside a real OpenShift cluster.
+#
+#   oc new-project agentic-rag
+#   oc create secret generic rag-secrets --from-env-file=<(grep -E '^(ANTHROPIC_API_KEY|POSTGRES_PASSWORD)=' .env)
+#   oc apply -k deploy/openshift
+#   oc get route web    # -> https://web-agentic-rag.apps.<cluster>/
+#
+# Postgres note: the stock postgres image needs to start as root to fix volume ownership,
+# which restricted SCC forbids. On OpenShift, use a managed Postgres or an operator
+# (CloudNativePG / Crunchy) and point DATABASE_URL at it; drop postgres.yaml from base.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../k8s/base
+  - route.yaml

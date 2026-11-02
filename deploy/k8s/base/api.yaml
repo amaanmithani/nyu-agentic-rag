@@ -1,0 +1,107 @@
+# FastAPI backend: 2 replicas behind a Service. Safe to run several because all shared state
+# is external: sessions/locks in Redis + Postgres, uploads and model cache on volumes.
+#
+# Probes:
+#   startup    /health with a long budget: the first start downloads ~200 MB of models
+#   readiness  /health: 503 when Postgres is down -> pod leaves the Service; a Redis outage
+#              returns 200 "degraded", so the API keeps serving
+#   liveness   TCP only: a DB outage must not make Kubernetes restart healthy API pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector: { app: api }
+  ports: [{ port: 8000, targetPort: 8000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } # zero-downtime updates
+  selector:
+    matchLabels: { app: api }
+  template:
+    metadata:
+      labels: { app: api }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: api
+          image: ghcr.io/amaanmithani/nyu-agentic-rag-api:latest
+          ports: [{ containerPort: 8000 }]
+          envFrom:
+            - configMapRef: { name: rag-config }
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom: { secretKeyRef: { name: rag-secrets, key: ANTHROPIC_API_KEY } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: rag-secrets, key: POSTGRES_PASSWORD } }
+            - name: DATABASE_URL # $(VAR) expands env vars defined above
+              value: postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@db:5432/$(POSTGRES_DB)
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+          lifecycle:
+            # Keep serving for a few seconds after shutdown starts, while the endpoint is
+            # removed from the Service. Without it, ~1% of requests failed during a rollout.
+            preStop:
+              exec: { command: ["sleep", "5"] }
+          startupProbe:
+            httpGet: { path: /health, port: 8000 }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: 8000 }
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 250m, memory: 1Gi }
+            limits: { memory: 2560Mi }
+          volumeMounts:
+            - { name: uploads, mountPath: /data/uploads }
+            - { name: models, mountPath: /models }
+      volumes:
+        # ReadWriteOnce is fine on one node. Multi-node: ReadWriteMany storage, or object
+        # storage for uploads and models baked into the image.
+        - name: uploads
+          persistentVolumeClaim: { claimName: uploads }
+        - name: models
+          persistentVolumeClaim: { claimName: model-cache }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uploads
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 2Gi } }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-cache
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 2Gi } }
+---
+# Scale the API on CPU (embedding + reranking are CPU-bound). Needs metrics-server.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: api }
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }

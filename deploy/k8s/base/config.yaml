@@ -1,0 +1,24 @@
+# Non-secret configuration (same keys as .env.example). Secrets (API key, DB password)
+# live in the "rag-secrets" Secret, created by deploy.sh from .env, never committed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rag-config
+data:
+  ANTHROPIC_MODEL: claude-sonnet-5-5
+  LLM_PROVIDER: anthropic
+  LLM_EFFORT: medium
+  EMBEDDING_MODEL: BAAI/bge-small-en-v1.5
+  RERANK_MODEL: Xenova/ms-marco-MiniLM-L-6-v2
+  POSTGRES_USER: rag
+  POSTGRES_DB: rag
+  MAX_STEPS: "8"
+  TOOL_TIMEOUT_S: "5"
+  TOOL_MAX_RETRIES: "2"
+  MAX_TOKENS_PER_RUN: "60000"
+  RUN_DEADLINE_S: "60"
+  ALLOW_FAULT_INJECTION: "true" # demo/eval only; set "false" in production
+  REDIS_URL: redis://redis:6379/0
+  UPLOAD_DIR: /data/uploads
+  HF_HOME: /models
+  FASTEMBED_CACHE_PATH: /models
