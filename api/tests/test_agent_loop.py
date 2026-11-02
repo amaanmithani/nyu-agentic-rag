@@ -252,3 +252,49 @@ def test_stub_llm_runs_full_loop():
     result, events = run(StubLLM(), question="How much sleep do adults need?")
     assert result.status == "answered" and "[sleep:8]" in result.answer
     assert [t for t, _ in events][:3] == ["run_started", "llm_call", "tool_call"]
+
+
+# --- baseline (single pass)
+
+from app.baseline.run import run_baseline  # noqa: E402
+
+
+def run_base(llm, question="How much sleep do adults need?", **kw):
+    events = []
+    fault = kw.pop("fault_inject", None)
+    result = run_baseline(
+        RunInput(question, fault_inject=fault),
+        llm,
+        settings(**kw),
+        lambda t, p: events.append((t, p)),
+    )
+    return result, events
+
+
+def test_baseline_is_exactly_one_search_and_one_generation():
+    llm = ScriptedLLM([text_turn("Adults need at least 7-8 hours of sleep [sleep:8].")])
+    result, events = run_base(llm)
+    assert [t for t, _ in events] == [
+        "run_started",
+        "tool_call",
+        "tool_result",
+        "llm_call",
+        "run_finished",
+    ]
+    assert len(llm.calls) == 1 and llm.calls[0]["allow_tools"] is False
+    assert 'source="sleep:8"' in llm.calls[0]["messages"][0]["content"]
+    assert result.steps == 1 and result.citation_report["all_supported"]
+
+
+def test_baseline_cannot_recover_from_weak_retrieval():
+    llm = ScriptedLLM([text_turn("The documents do not say.")])
+    _, events = run_base(llm, question="bad wording about sleep")
+    assert next(p for t, p in events if t == "tool_result")["status"] == "weak"
+    assert len(llm.calls) == 1  # no second search: that's what the agent adds
+
+
+def test_baseline_with_failing_search_still_answers_gracefully():
+    llm = ScriptedLLM([text_turn("Search failed; no evidence available.")])
+    result, events = run_base(llm, fault_inject="search_documents:error:9")
+    assert next(p for t, p in events if t == "tool_result")["status"] == "error"
+    assert result.status == "answered" and result.evidence == {}

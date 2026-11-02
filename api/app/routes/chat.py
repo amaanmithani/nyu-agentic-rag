@@ -15,7 +15,7 @@ import json
 import logging
 import queue
 import threading
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from app import runs, sessions
 from app.agent.llm import LLMError, make_llm
 from app.agent.loop import RunInput, run_agent
+from app.baseline.run import run_baseline
 from app.config import get_settings
 from app.tools.executor import FaultPlan
 
@@ -35,6 +36,8 @@ class AskBody(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     # Debug/eval only, rejected unless ALLOW_FAULT_INJECTION=true. e.g. "search_documents:timeout:1"
     fault_inject: str | None = Field(default=None, max_length=200)
+    # "baseline" = single-pass retrieve-once/generate-once, for the eval comparison.
+    mode: Literal["agent", "baseline"] = "agent"
 
 
 @router.post("/sessions", status_code=201)
@@ -88,7 +91,7 @@ def ask(sid: str, body: AskBody, stream: Annotated[bool, Query()] = True):
     if not sessions.acquire_lock(sid):
         raise HTTPException(409, "a question is already running in this session")
 
-    run_id = runs.create_run(sid, "agent", body.question)
+    run_id = runs.create_run(sid, body.mode, body.question)
     events: queue.Queue = queue.Queue()
     seq = 0
     tool_results: list[dict] = []
@@ -109,7 +112,8 @@ def ask(sid: str, body: AskBody, stream: Annotated[bool, Query()] = True):
                 clarification=state["pending_clarification"],
                 fault_inject=body.fault_inject,
             )
-            result = run_agent(inp, llm, settings, emit)
+            runner = run_agent if body.mode == "agent" else run_baseline
+            result = runner(inp, llm, settings, emit)
             runs.finish_run(run_id, result)
             sessions.record_turn(state, run_id, body.question, result)
             state["last_tool_results"] = tool_results
