@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     llm_provider: str = "anthropic"  # "anthropic" | "stub"
 
     embedding_model: str = "BAAI/bge-small-en-v1.5"
+    rerank_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
     upload_dir: str = "/data/uploads"
 
     # Agent safety limits

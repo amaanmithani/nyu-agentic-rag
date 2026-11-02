@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Uploads every PDF in corpus/pdfs/ through the public API (same path as the UI)
+# and waits until each document is ready. Re-running is safe: duplicates are skipped.
+set -euo pipefail
+API="${API:-http://localhost:8000}"
+cd "$(dirname "$0")/.."
+
+args=()
+for f in corpus/pdfs/*.pdf; do args+=(-F "files=@$f;type=application/pdf"); done
+resp="$(curl -fsS "${args[@]}" "$API/documents")"
+echo "$resp" | python3 -m json.tool
+
+for id in $(echo "$resp" | python3 -c 'import json,sys; print(" ".join(d["doc_id"] for d in json.load(sys.stdin)["documents"] if "doc_id" in d))'); do
+  while :; do
+    s="$(curl -fsS "$API/documents/$id/status")"
+    st="$(echo "$s" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
+    [[ "$st" == "processing" ]] || break
+    sleep 2
+  done
+  echo "$s"
+done
