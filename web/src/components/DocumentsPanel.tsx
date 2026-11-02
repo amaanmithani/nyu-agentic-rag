@@ -51,7 +51,7 @@ export default function DocumentsPanel() {
   return (
     <section className="flex min-h-0 flex-col gap-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold text-slate-700">Documents</h2>
+        <h2 className="text-sm font-semibold text-slate-700">Governance library</h2>
         <span className="text-xs text-slate-500">
           {docs.length} docs · {pages} pages
         </span>
@@ -65,7 +65,7 @@ export default function DocumentsPanel() {
           onFiles(e.dataTransfer.files);
         }}
       >
-        {uploading ? "Uploading…" : "Drop PDFs here or click to upload"}
+        {uploading ? "Uploading…" : "Drop policy or framework PDFs here, or click to upload"}
         <input
           ref={input}
           type="file"

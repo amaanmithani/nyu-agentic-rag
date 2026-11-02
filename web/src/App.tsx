@@ -109,9 +109,9 @@ export default function App() {
     <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2">
         <div>
-          <h1 className="text-base font-semibold">Agentic RAG · Health Guidelines</h1>
+          <h1 className="text-base font-semibold">AI Risk & Governance Assistant</h1>
           <p className="text-[11px] text-slate-500">
-            Answers only from the uploaded documents, with verified page citations.
+            Agentic RAG over NIST AI frameworks, federal AI policy and AI governance documents · every answer cites a verified page.
           </p>
         </div>
         <div className="flex items-center gap-3 text-[11px]">

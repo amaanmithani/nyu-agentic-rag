@@ -28,6 +28,20 @@ STOPWORDS = set(
 )
 MIN_WORD_OVERLAP = 0.25
 
+# Numbers that *identify* a source rather than state a requirement: dates ("March 28, 2024"),
+# years ("the 2025 memo"), document ids ("M-24-10", "SP 800-218A", "AI 100-1"), executive
+# orders and section references. They are removed before the number check because they are
+# often printed on a different page than the cited fact. Trade-off: a wrong year in a claim
+# is no longer caught by this heuristic (the eval's LLM judge still sees it).
+NON_CLAIM_NUMBERS = re.compile(
+    r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?"
+    r"|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?\s+\d{1,2}(?:,\s*\d{4})?"
+    r"|\b(?:19[89]\d|20[0-3]\d)\b"
+    r"|\b[A-Z][A-Za-z.]{0,4}[ -]?\d+(?:-\d+[A-Za-z0-9]*)+"
+    r"|\b(?:Executive Order|E\.?O\.?)\s+\d+"
+    r"|(?:\bSection|\bSec\.|§)\s*\d+"
+)
+
 
 @dataclass
 class CitationCheck:
@@ -69,7 +83,7 @@ def verify(answer: str, evidence: dict[str, str]) -> list[CitationCheck]:
         if not cited:
             continue
         claim = CITATION_GROUP.sub("", sentence)
-        claim_numbers = _norm_numbers(claim) - label_numbers
+        claim_numbers = _norm_numbers(NON_CLAIM_NUMBERS.sub(" ", claim)) - label_numbers
         claim_words = {w for w in WORD.findall(claim.lower()) if w not in STOPWORDS}
         # A sentence citing several pages may take each fact from a different one.
         pool = " ".join(evidence.get(k, "") for k in cited).lower()

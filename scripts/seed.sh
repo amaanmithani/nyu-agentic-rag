@@ -6,7 +6,11 @@ API="${API:-http://localhost:8000}"
 cd "$(dirname "$0")/.."
 
 args=()
-for f in corpus/pdfs/*.pdf; do args+=(-F "files=@$f;type=application/pdf"); done
+for f in corpus/pdfs/*.pdf; do
+  # Optional display title from manifest.tsv (4th column); otherwise the PDF metadata is used.
+  title="$(awk -F'\t' -v n="$(basename "$f")" '$1 == n {print $4}' corpus/manifest.tsv)"
+  args+=(-F "files=@$f;type=application/pdf" -F "titles=$title")
+done
 resp="$(curl -fsS "${args[@]}" "$API/documents")"
 echo "$resp" | python3 -m json.tool
 

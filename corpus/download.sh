@@ -11,7 +11,7 @@ if command -v sha256sum >/dev/null; then sha() { sha256sum "$1" | cut -d' ' -f1;
 else sha() { shasum -a 256 "$1" | cut -d' ' -f1; }; fi
 
 failed=0
-while IFS=$'\t' read -r name expected url; do
+while IFS=$'\t' read -r name expected url _title; do
   [[ "$name" == "filename" ]] && continue
   if [[ ! -f "pdfs/$name" ]]; then
     echo "downloading $name"

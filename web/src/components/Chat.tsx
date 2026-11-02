@@ -51,11 +51,11 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto pb-4">
         {!turns.length && (
           <div className="mt-10 text-center text-sm text-slate-500">
-            <p className="mb-3">Ask about the uploaded documents. Try:</p>
+            <p className="mb-3">Ask about AI risk management, federal AI policy, or generative-AI security. Try:</p>
             {[
-              "How much sleep and how much weekly physical activity do adults need?",
-              "Do short bouts of exercise under 10 minutes count toward the guidelines?",
-              "How much exercise do I need?",
+              "How quickly must agencies designate a Chief AI Officer under the 2024 and 2025 OMB memos?",
+              "Which risks does NIST say are unique to generative AI, and how does it describe prompt injection?",
+              "What do I have to do before deploying my AI system?",
             ].map((q) => (
               <button
                 key={q}
@@ -128,7 +128,7 @@ export default function Chat({ turns, selected, evidence, busy, onAsk, onSelect 
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={pending ? "Answer the question above, or type your own reply…" : "Ask a question…"}
+            placeholder={pending ? "Answer the question above, or type your own reply…" : "Ask about AI risk, policy or governance…"}
             className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
             disabled={busy}
           />

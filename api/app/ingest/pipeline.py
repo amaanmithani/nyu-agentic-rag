@@ -64,7 +64,8 @@ def get_job_status(doc_id: str) -> dict | None:
     return (row | {"source": "postgres"}) if row else None
 
 
-def register_upload(data: bytes, filename: str) -> Registered:
+def register_upload(data: bytes, filename: str, title: str | None = None) -> Registered:
+    """title: optional display title; otherwise the PDF's metadata title or the filename."""
     if len(data) > MAX_UPLOAD_BYTES:
         raise UploadRejected(f"{filename}: larger than {MAX_UPLOAD_BYTES // 2**20} MB")
     if not data.startswith(b"%PDF-"):
@@ -91,7 +92,7 @@ def register_upload(data: bytes, filename: str) -> Registered:
             doc_id = f"{base}-{n}"
         conn.execute(
             "INSERT INTO documents (id, title, filename, sha256) VALUES (%s, %s, %s, %s)",
-            (doc_id, Path(filename).stem, filename, sha),
+            (doc_id, (title or "").strip()[:300] or Path(filename).stem, filename, sha),
         )
 
     path = Path(get_settings().upload_dir) / f"{doc_id}.pdf"
@@ -130,7 +131,9 @@ def process_document(doc_id: str) -> None:
                 )
             conn.execute(
                 "UPDATE documents SET status = 'ready', page_count = %s, chunk_count = %s, "
-                "title = COALESCE(%s, title) WHERE id = %s",
+                # PDF metadata title replaces the filename fallback, never an explicit title.
+                "title = CASE WHEN title = regexp_replace(filename, '\\.[^.]*$', '') "
+                "THEN COALESCE(%s, title) ELSE title END WHERE id = %s",
                 (len(parsed.pages), len(chunks), parsed.title, doc_id),
             )
             # Invalidates every cached search result (the version is part of the key).

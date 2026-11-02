@@ -91,3 +91,23 @@ def test_edition_years_from_doc_ids_are_not_treated_as_claims():
         "The 2008 guidelines required episodes of at least 20 minutes [pag-2008:33].", evidence
     )
     assert wrong[0].status == "unsupported"  # a wrong figure is still caught
+
+
+def test_dates_years_and_document_ids_are_not_claims():
+    evidence = {
+        "omb-m-25-21:10": "Within 60 days of the issuance of this memorandum, the head "
+        "of each agency must retain or designate a Chief AI Officer."
+    }
+    for sentence in [
+        "The 2025 memo (M-25-21, dated April 3, 2025) requires a CAIO within 60 days "
+        "[omb-m-25-21:10].",
+        "Under Executive Order 14179 and Section 104, agencies designate a Chief AI Officer "
+        "within 60 days [omb-m-25-21:10].",
+        "NIST SP 800-218A aside, the memo requires a Chief AI Officer within 60 days "
+        "[omb-m-25-21:10].",
+    ]:
+        assert verify(sentence, evidence)[0].status == "supported", sentence
+    wrong = verify(
+        "The 2025 memo requires a Chief AI Officer within 90 days [omb-m-25-21:10].", evidence
+    )
+    assert wrong[0].status == "unsupported" and "90" in wrong[0].reason

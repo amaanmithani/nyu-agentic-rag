@@ -21,7 +21,7 @@ curl -fsS "$WEB/api/health" >/dev/null || fail "web -> api proxy"
 echo
 
 echo "2) ingest"
-PDF=corpus/synthetic/maplewood-wellness-handbook-SYNTHETIC.pdf
+PDF=corpus/synthetic/northbridge-ai-policy-SYNTHETIC.pdf
 DOC=$(curl -fsS -F "files=@$PDF;type=application/pdf" "$API/documents" | j 'd["documents"][0]["doc_id"]')
 for _ in $(seq 1 60); do
   STATUS=$(curl -fsS "$API/documents/$DOC/status" | j 'd["status"]')
@@ -37,7 +37,7 @@ ASK() {
   curl -fsS -X POST "$API/sessions/$SID/ask?stream=false" -H 'content-type: application/json' \
     -d "{\"question\": \"$1\"}" | j '[e["data"] for e in d["events"] if e["type"]=="run_finished"][0]["answer"]'
 }
-ANSWER=$(ASK "When does the Maplewood walking club meet?")
+ANSWER=$(ASK "When does the Northbridge AI Review Board meet?")
 echo "   $ANSWER"
 [[ "$ANSWER" == *"[$DOC:"* ]] || fail "answer has no citation to $DOC"
 
@@ -45,7 +45,7 @@ echo "4) redis outage"
 docker compose stop redis >/dev/null 2>&1
 curl -fsS "$API/health" | tee /dev/stderr | grep -q '"redis":"degraded"' || fail "health not degraded"
 echo
-ANSWER=$(ASK "What does the handbook say about sleep?")
+ANSWER=$(ASK "What does the policy say about approving generative AI tools?")
 [[ -n "$ANSWER" ]] || fail "no answer with redis down"
 SOURCE=$(curl -fsS "$API/sessions/$SID" | j 'd["state_source"]')
 [[ "$SOURCE" == "postgres" ]] || fail "state source $SOURCE"

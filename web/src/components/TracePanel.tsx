@@ -14,7 +14,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 export default function TracePanel({ events, running }: { events: TraceEvent[]; running: boolean }) {
   if (!events.length) {
-    return <p className="text-sm text-slate-500">Ask a question to see the agent's tool calls here.</p>;
+    return <p className="text-sm text-slate-500">Ask a question to see how the agent searches the governance library, step by step.</p>;
   }
   const results = new Map(events.filter((e) => e.type === "tool_result").map((e) => [e.data.id, e.data]));
   const finished = events.find((e) => e.type === "run_finished")?.data;

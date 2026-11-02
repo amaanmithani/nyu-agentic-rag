@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Query, UploadFile
 
 from app.db import get_pool
 from app.ingest import pipeline
@@ -10,12 +10,17 @@ router = APIRouter()
 
 
 @router.post("/documents", status_code=202)
-async def upload_documents(files: list[UploadFile], background: BackgroundTasks):
+async def upload_documents(
+    files: list[UploadFile],
+    background: BackgroundTasks,
+    titles: Annotated[list[str] | None, Form()] = None,  # optional, same order as files
+):
     """Accepts one or more PDFs. Returns immediately; poll /documents/{id}/status."""
     results = []
-    for f in files:
+    for i, f in enumerate(files):
+        title = titles[i] if titles and i < len(titles) else None
         try:
-            reg = pipeline.register_upload(await f.read(), f.filename or "upload.pdf")
+            reg = pipeline.register_upload(await f.read(), f.filename or "upload.pdf", title)
         except pipeline.UploadRejected as e:
             results.append({"filename": f.filename, "status": "rejected", "error": str(e)})
             continue

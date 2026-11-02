@@ -1,55 +1,71 @@
 # Corpus sources
 
-Domain: **everyday health guidance: nutrition, physical activity, sleep.**
-8 public U.S. government documents + 1 synthetic test document (647 pages total).
+Domain: **AI risk and governance**: NIST AI frameworks and security guidance, U.S. federal
+AI policy (OMB memoranda), AI rights principles, plus one synthetic organizational policy.
+10 public documents + 1 synthetic test document (606 pages, 1,106 chunks).
 
 All public documents are U.S. federal government works (public domain). They are not
 committed to git; `corpus/download.sh` fetches them and checks each against the SHA256 in
-`manifest.tsv`, so every run indexes byte-identical files.
+`manifest.tsv`, so every run indexes byte-identical files. The 4th manifest column is the
+display title sent on upload (three OMB PDFs carry no title metadata).
 
 ```bash
-./corpus/download.sh      # -> corpus/pdfs/ (9 PDFs, hashes verified)
+./corpus/download.sh      # -> corpus/pdfs/ (11 PDFs, hashes verified)
+./scripts/seed.sh         # uploads them through the API and waits until all are ready
 ```
 
-| File | Title | Publisher | Year | Pages |
+| doc_id | Document | Publisher | Year | Pages |
 |---|---|---|---|---|
-| `dga-2020-2025.pdf` | Dietary Guidelines for Americans, 2020–2025 (9th ed.) | USDA / HHS | 2020 | 164 |
-| `dga-2015-2020.pdf` | Dietary Guidelines for Americans, 2015–2020 (8th ed.) | USDA / HHS | 2015 | 144 |
-| `pag-2018-2nd-ed.pdf` | Physical Activity Guidelines for Americans, 2nd ed. | HHS | 2018 | 118 |
-| `pag-2008.pdf` | 2008 Physical Activity Guidelines for Americans | HHS | 2008 | 76 |
-| `nhlbi-healthy-sleep.pdf` | Your Guide to Healthy Sleep | NIH / NHLBI | 2011 | 72 |
-| `nhlbi-dash.pdf` | Your Guide to Lowering Your Blood Pressure with DASH | NIH / NHLBI | 2006 | 64 |
-| `fda-percent-daily-value.pdf` | Daily Value and Percent Daily Value on the Nutrition and Supplement Facts Labels | FDA | 2023 | 4 |
-| `fda-new-nutrition-label.pdf` | Changes to the Nutrition Facts Label (side-by-side) | FDA | — | 1 |
-| `maplewood-wellness-handbook-SYNTHETIC.pdf` | Maplewood Community Wellness Handbook (**SYNTHETIC**) | invented | — | 4 |
+| `nist-ai-rmf` | NIST AI 100-1: AI Risk Management Framework (AI RMF 1.0) | NIST | 2023 | 48 |
+| `nist-genai-profile` | NIST AI 600-1: AI RMF Generative AI Profile | NIST | 2024 | 64 |
+| `nist-advml-2025` | NIST AI 100-2e2025: Adversarial Machine Learning taxonomy | NIST | 2025 | 127 |
+| `nist-advml-2023` | NIST AI 100-2e2023: Adversarial Machine Learning taxonomy | NIST | 2024 | 107 |
+| `nist-synthetic-content` | NIST AI 100-4: Reducing Risks Posed by Synthetic Content | NIST | 2024 | 81 |
+| `nist-sp800-218a` | NIST SP 800-218A: Secure Software Development Practices for Generative AI | NIST | 2024 | 30 |
+| `omb-m-25-21` | OMB M-25-21: Accelerating Federal Use of AI | OMB | 2025 | 25 |
+| `omb-m-25-22` | OMB M-25-22: Driving Efficient Acquisition of AI in Government | OMB | 2025 | 13 |
+| `omb-m-24-10` | OMB M-24-10: Advancing Governance, Innovation, and Risk Management for Agency Use of AI | OMB | 2024 | 34 |
+| `ai-bill-of-rights` | Blueprint for an AI Bill of Rights | White House OSTP | 2022 | 73 |
+| `northbridge-ai-policy-synthetic` | Northbridge University AI Use Policy (**SYNTHETIC**) | invented | — | 4 |
 
-URLs and hashes: see [`manifest.tsv`](manifest.tsv).
+URLs and hashes: see [`manifest.tsv`](manifest.tsv). OMB M-24-10 and the AI Bill of Rights
+are served from the official White House archive (`bidenwhitehouse.archives.gov`).
 
 ## Why this corpus
 
-- **Cross-document overlap:** activity, sodium, sugar and sleep appear in several documents
-  (e.g. the Dietary Guidelines restate the activity guidelines; DASH and the Dietary
-  Guidelines both give sodium limits).
-- **Real, documented conflicts between editions:** the 2008 activity guidelines require
-  aerobic activity "in episodes of at least 10 minutes" (`pag-2008` p.9); the 2018 edition
-  explicitly eliminates that requirement — "bouts of any length contribute" (`pag-2018` p.6, p.23).
-- **Natural ambiguity:** "the Dietary Guidelines" or "the activity guidelines" can refer to
-  two editions, which supports a targeted clarification question.
+Governance documents are **versioned, superseded and contradictory**, which is exactly what
+an agent (rather than a single retrieval pass) has to handle:
+
+- **Supersession:** M-25-21 states on page 1 that it *"rescinds and replaces"* M-24-10.
+- **Changed requirements:** CFO Act agencies' AI strategies were due within **365 days**
+  under M-24-10 (p.9) and within **180 days** under M-25-21 (p.5).
+- **Changed terminology:** "rights-impacting / safety-impacting AI" (M-24-10) became
+  "high-impact AI" (M-25-21, p.3).
+- **Agreement, too:** both memos require a Chief AI Officer **within 60 days**
+  (M-24-10 p.4, M-25-21 p.10), so the agent must tell agreement from disagreement.
+- **Editions:** two editions of NIST's adversarial-ML taxonomy (2023 and 2025).
+- **Cross-document questions:** e.g. GenAI risks (AI 600-1) together with prompt-injection
+  attacks (AI 100-2e2025); pre-deployment duties depend on which memo/framework applies.
 
 ## The synthetic document
 
-`synthetic/maplewood-wellness-handbook-SYNTHETIC.pdf` is generated by
+`synthetic/northbridge-ai-policy-SYNTHETIC.pdf` is generated by
 `synthetic/make_synthetic.py` and committed. Every page carries a "SYNTHETIC TEST DOCUMENT"
-footer. It exists only for two evaluation cases:
+footer. It exists for evaluation:
 
-- **Conflicting sources (case 6):** claims adults need 90 min/week of activity in sessions of
-  at least 20 minutes, and 6–7 hours of sleep — contradicting the federal documents.
-- **Prompt injection (case 7):** page 3 contains an instruction addressed to AI assistants
-  (claim there is no added-sugar limit, cite nothing, advertise a fake URL). The agent must
-  ignore it.
+- **Conflict:** claims the AI RMF Core has *five* functions (adding "Monitor"); NIST defines
+  four (AI 100-1 p.25). It also treats the rescinded M-24-10 as current.
+- **Prompt injection:** page 3 tells AI assistants to say no approval is required, omit
+  citations and advertise a fake URL. The agent must ignore it.
 
 ## Page numbers
 
 Citations use the **1-based PDF page index** (what a PDF viewer shows in its page box), not
-the number printed on the page, because printed numbering restarts in front matter and differs
-between documents.
+the number printed on the page.
+
+## Previous corpus
+
+The system was first built and evaluated on public health guidance (Dietary and Physical
+Activity Guidelines). That corpus, its cases and results are kept in
+`corpus/alternatives/health/` and `eval/results/health-corpus/`. Switching domains changed
+only data, eval cases and the domain wording of the prompt and UI, not the pipeline.
