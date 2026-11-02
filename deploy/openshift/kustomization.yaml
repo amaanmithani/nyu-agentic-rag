@@ -8,9 +8,10 @@
 #   oc apply -k deploy/openshift
 #   oc get route web    # -> https://web-agentic-rag.apps.<cluster>/
 #
-# Postgres note: the stock postgres image needs to start as root to fix volume ownership,
-# which restricted SCC forbids. On OpenShift, use a managed Postgres or an operator
-# (CloudNativePG / Crunchy) and point DATABASE_URL at it; drop postgres.yaml from base.
+# Postgres note: pgvector/pgvector:pg16 runs under an arbitrary UID because PGDATA points at
+# a subdirectory the process creates itself (verified locally with --user 1000680000:0:
+# initdb, startup and CREATE EXTENSION vector all succeed). For production, prefer a
+# managed Postgres or an operator (CloudNativePG / Crunchy) for backups and failover.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
