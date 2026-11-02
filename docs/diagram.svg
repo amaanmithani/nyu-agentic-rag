@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="820" fill="#ffffff"/>
+  <text x="600" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#0f172a">AI Risk &amp; Governance Assistant: system and agent loop</text>
+
+  <!-- ===== Components row ===== -->
+  <rect x="30" y="60" width="200" height="120" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="130" y="88" text-anchor="middle" font-size="16" font-weight="bold" fill="#312e81">Browser</text>
+  <text x="130" y="110" text-anchor="middle" font-size="13" fill="#334155">React UI: upload, chat,</text>
+  <text x="130" y="128" text-anchor="middle" font-size="13" fill="#334155">citation chips, clarify</text>
+  <text x="130" y="146" text-anchor="middle" font-size="13" fill="#334155">buttons, live trace</text>
+
+  <rect x="290" y="60" width="200" height="120" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="390" y="88" text-anchor="middle" font-size="16" font-weight="bold" fill="#312e81">web (nginx :8080)</text>
+  <text x="390" y="110" text-anchor="middle" font-size="13" fill="#334155">serves the SPA</text>
+  <text x="390" y="128" text-anchor="middle" font-size="13" fill="#334155">proxies /api/* → api</text>
+  <text x="390" y="146" text-anchor="middle" font-size="13" fill="#334155">SSE unbuffered</text>
+
+  <rect x="550" y="60" width="300" height="120" rx="10" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="700" y="88" text-anchor="middle" font-size="16" font-weight="bold" fill="#064e3b">api (FastAPI :8000)</text>
+  <text x="700" y="110" text-anchor="middle" font-size="13" fill="#334155">ingest · hybrid retrieval · agent loop</text>
+  <text x="700" y="128" text-anchor="middle" font-size="13" fill="#334155">baseline · sessions · runs/trace</text>
+  <text x="700" y="146" text-anchor="middle" font-size="13" fill="#334155">bge-small + MiniLM reranker (CPU)</text>
+  <text x="700" y="164" text-anchor="middle" font-size="12" fill="#64748b">REST + Server-Sent Events</text>
+
+  <rect x="910" y="50" width="260" height="58" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="1040" y="74" text-anchor="middle" font-size="15" font-weight="bold" fill="#78350f">Claude API</text>
+  <text x="1040" y="94" text-anchor="middle" font-size="12" fill="#334155">claude-sonnet-5-5, tool use, caching</text>
+
+  <rect x="910" y="120" width="125" height="70" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="972" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#0f172a">Postgres 16</text>
+  <text x="972" y="163" text-anchor="middle" font-size="11" fill="#334155">+pgvector, tsvector</text>
+  <text x="972" y="179" text-anchor="middle" font-size="11" fill="#334155">source of truth</text>
+
+  <rect x="1045" y="120" width="125" height="70" rx="10" fill="#fee2e2" stroke="#ef4444" stroke-width="2"/>
+  <text x="1107" y="145" text-anchor="middle" font-size="14" font-weight="bold" fill="#7f1d1d">Redis 7</text>
+  <text x="1107" y="163" text-anchor="middle" font-size="11" fill="#334155">cache · sessions</text>
+  <text x="1107" y="179" text-anchor="middle" font-size="11" fill="#334155">locks · job status</text>
+
+  <line x1="230" y1="120" x2="288" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <line x1="490" y1="120" x2="548" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <line x1="850" y1="90" x2="908" y2="80" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="850" y1="140" x2="908" y2="152" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M850,165 C 900,215 1060,215 1100,192" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- ===== Agent loop ===== -->
+  <rect x="30" y="230" width="780" height="560" rx="14" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="50" y="258" font-size="17" font-weight="bold" fill="#0f172a">Agent loop (api/app/agent/loop.py)</text>
+  <text x="50" y="278" font-size="12" fill="#64748b">The model decides what to do; code enforces limits, runs tools safely and verifies citations.</text>
+
+  <rect x="60" y="295" width="300" height="62" rx="8" fill="#ffffff" stroke="#6366f1" stroke-width="2"/>
+  <text x="210" y="320" text-anchor="middle" font-size="14" font-weight="bold" fill="#312e81">Question + session context</text>
+  <text x="210" y="340" text-anchor="middle" font-size="12" fill="#334155">prior turns · pending clarification</text>
+
+  <polygon points="210,380 345,425 210,470 75,425" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="210" y="420" text-anchor="middle" font-size="13" font-weight="bold" fill="#7c2d12">Limits OK?</text>
+  <text x="210" y="438" text-anchor="middle" font-size="11" fill="#334155">steps · tokens · deadline</text>
+
+  <rect x="60" y="500" width="300" height="70" rx="8" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+  <text x="210" y="525" text-anchor="middle" font-size="14" font-weight="bold" fill="#78350f">PLAN / DECIDE: Claude turn</text>
+  <text x="210" y="545" text-anchor="middle" font-size="12" fill="#334155">decompose (purpose = sub-question),</text>
+  <text x="210" y="561" text-anchor="middle" font-size="12" fill="#334155">rephrase, read more, clarify, answer</text>
+
+  <rect x="60" y="600" width="300" height="70" rx="8" fill="#ffffff" stroke="#10b981" stroke-width="2"/>
+  <text x="210" y="625" text-anchor="middle" font-size="14" font-weight="bold" fill="#064e3b">ACT: tool executor</text>
+  <text x="210" y="645" text-anchor="middle" font-size="12" fill="#334155">validate → 5 s timeout → ≤2 retries</text>
+  <text x="210" y="661" text-anchor="middle" font-size="12" fill="#334155">(transient only) · read-only SQL</text>
+
+  <rect x="60" y="700" width="300" height="70" rx="8" fill="#ffffff" stroke="#10b981" stroke-width="2"/>
+  <text x="210" y="725" text-anchor="middle" font-size="14" font-weight="bold" fill="#064e3b">OBSERVE: ToolResult</text>
+  <text x="210" y="745" text-anchor="middle" font-size="12" fill="#334155">ok · empty · weak · error · timeout</text>
+  <text x="210" y="761" text-anchor="middle" font-size="12" fill="#334155">text wrapped in &lt;document_content&gt;</text>
+
+  <line x1="210" y1="357" x2="210" y2="378" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="210" y1="470" x2="210" y2="498" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="220" y="489" font-size="11" fill="#166534">yes</text>
+  <line x1="210" y1="570" x2="210" y2="598" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="220" y="589" font-size="11" fill="#334155">tool calls</text>
+  <line x1="210" y1="670" x2="210" y2="698" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M60,735 C 20,735 20,425 73,425" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="26" y="590" font-size="11" fill="#334155" transform="rotate(-90 26 590)">loop: next step</text>
+
+  <!-- tools legend -->
+  <rect x="390" y="600" width="400" height="170" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="405" y="624" font-size="14" font-weight="bold" fill="#0f172a">Tools (read-only, never raise)</text>
+  <text x="405" y="648" font-size="12" fill="#334155">list_documents: ids, titles, page counts</text>
+  <text x="405" y="670" font-size="12" fill="#334155">search_documents: hybrid + rerank; "weak" if best &lt; 0.0</text>
+  <text x="405" y="692" font-size="12" fill="#334155">read_document_section: 1-3 full pages</text>
+  <text x="405" y="714" font-size="12" fill="#334155">ask_clarification: terminal; saved in session</text>
+  <text x="405" y="742" font-size="11" fill="#64748b">Retrieval: pgvector top-40 + OR full-text top-40</text>
+  <text x="405" y="758" font-size="11" fill="#64748b">→ RRF (k=60) → cross-encoder rerank top-20 → Redis cache</text>
+
+  <!-- stopping conditions -->
+  <rect x="390" y="295" width="400" height="285" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="405" y="319" font-size="14" font-weight="bold" fill="#0f172a">Stopping conditions → outcome</text>
+  <text x="405" y="345" font-size="12" fill="#166534">● no tool calls → answered</text>
+  <text x="405" y="367" font-size="12" fill="#4338ca">● ask_clarification → clarification (pending in session)</text>
+  <text x="405" y="389" font-size="12" fill="#9a3412">● step_limit (8) · token_budget (60k) · deadline (60 s)</text>
+  <text x="420" y="407" font-size="12" fill="#9a3412">→ wrap-up call, tools off → partial + "Not completed:"</text>
+  <text x="405" y="429" font-size="12" fill="#b91c1c">● llm_error → evidence-only partial built by code</text>
+  <text x="405" y="451" font-size="12" fill="#b91c1c">● refusal → error</text>
+  <line x1="405" y1="467" x2="775" y2="467" stroke="#e2e8f0"/>
+  <text x="405" y="489" font-size="13" font-weight="bold" fill="#0f172a">Then, always:</text>
+  <text x="405" y="511" font-size="12" fill="#334155">citation check: every [doc:page] vs pages retrieved</text>
+  <text x="405" y="529" font-size="12" fill="#334155">this run → supported / unsupported / not_retrieved</text>
+  <text x="405" y="551" font-size="12" fill="#334155">persist: runs, trace_events, session (Redis + Postgres)</text>
+  <text x="405" y="569" font-size="12" fill="#334155">stream every event to the UI over SSE</text>
+  <line x1="345" y1="425" x2="388" y2="395" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="352" y="398" font-size="11" fill="#9a3412">no</text>
+
+  <!-- ===== Right column: state + redis ===== -->
+  <rect x="840" y="230" width="330" height="270" rx="14" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="860" y="258" font-size="16" font-weight="bold" fill="#0f172a">State</text>
+  <text x="860" y="284" font-size="12" font-weight="bold" fill="#334155">Per run</text>
+  <text x="860" y="302" font-size="12" fill="#334155">messages · evidence (doc:page → text)</text>
+  <text x="860" y="320" font-size="12" fill="#334155">usage (tokens, cost) · steps · tool calls</text>
+  <text x="860" y="346" font-size="12" font-weight="bold" fill="#334155">Per session</text>
+  <text x="860" y="364" font-size="12" fill="#334155">turns · evidence · pending_clarification</text>
+  <text x="860" y="382" font-size="12" fill="#334155">last_tool_results</text>
+  <text x="860" y="400" font-size="12" fill="#334155">write-through: Postgres, then Redis</text>
+  <text x="860" y="426" font-size="12" font-weight="bold" fill="#334155">Persisted per question</text>
+  <text x="860" y="444" font-size="12" fill="#334155">runs (status, tokens, cost, latency)</text>
+  <text x="860" y="462" font-size="12" fill="#334155">trace_events (one row per step)</text>
+  <text x="860" y="480" font-size="11" fill="#64748b">sessions are 128-bit tokens; runs scoped to session</text>
+
+  <rect x="840" y="520" width="330" height="270" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1.5"/>
+  <text x="860" y="548" font-size="16" font-weight="bold" fill="#7f1d1d">Redis keys</text>
+  <text x="860" y="574" font-size="12" fill="#334155">ret:{corpus_version}:{sha}   1 h</text>
+  <text x="860" y="592" font-size="11" fill="#64748b">  version bumped in Postgres on upload/delete</text>
+  <text x="860" y="614" font-size="12" fill="#334155">emb:{sha(query)}   7 days</text>
+  <text x="860" y="636" font-size="12" fill="#334155">session:{sid}   24 h sliding</text>
+  <text x="860" y="658" font-size="12" fill="#334155">lock:session:{sid}   SET NX EX 120</text>
+  <text x="860" y="680" font-size="12" fill="#334155">ingest:{doc_id}   1 h</text>
+  <line x1="860" y1="696" x2="1150" y2="696" stroke="#fecdd3"/>
+  <text x="860" y="718" font-size="12" font-weight="bold" fill="#7f1d1d">Redis down:</text>
+  <text x="860" y="738" font-size="12" fill="#334155">0.5 s timeouts + 15 s circuit breaker;</text>
+  <text x="860" y="756" font-size="12" fill="#334155">no cache, state from Postgres, lock skipped;</text>
+  <text x="860" y="774" font-size="12" fill="#334155">/health → 200 "redis: degraded"</text>
+</svg>
